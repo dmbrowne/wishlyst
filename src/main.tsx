@@ -1,48 +1,48 @@
-import React, { useEffect, useState } from "react";
-import { functions, auth } from "firebase/app";
+import React from "react";
 import { ThemeProvider } from "styled-components";
 import { Grommet } from "grommet";
-import { BrowserRouter, Route } from "react-router-dom";
+import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
+import { Provider as StoreProvider } from "react-redux";
+
+import store from "./store";
 import Lists from "./pages/lists";
 import Authentication from "./pages/authentication";
 import ListDetail from "./pages/list-detail";
 import { AuthProvider } from "./context/auth";
-import customTheme from "./theme";
+import darkTheme from "./themes/black-theme";
+import hpTheme from "./themes/hp-theme";
+import ClaimedItems from "./pages/claimed-items";
+import GuestProfileProvider from "./context/guest-profile";
+import Account from "./pages/account";
+import AuthenticatedRoute from "./components/authenticated-route";
 
 const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 function App() {
-  const getOpenGraphDetails = functions().httpsCallable("getImagesFromUrl");
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    return auth().onAuthStateChanged(user => {
-      if (user) {
-        if (!loggedIn) setLoggedIn(true);
-      } else {
-        if (loggedIn) setLoggedIn(false);
-      }
-    });
-  });
-
-  const onClick = async () => {
-    const graphData = await getOpenGraphDetails({
-      url: "https://www.johnlewis.com/john-lewis-partners-lulu-wall-light/antique-brass/p151177"
-    });
-  };
-  const signIn = () => {
-    auth().signInWithRedirect(new auth.GoogleAuthProvider());
-  };
   return (
-    <ThemeProvider theme={customTheme}>
-      <Grommet theme={customTheme} background={darkMode ? "black" : "light-1"} themeMode={darkMode ? "dark" : "light"} full>
-        <BrowserRouter>
-          <AuthProvider>
-            <Route path="/" exact component={Lists} />
-            <Route path="/login" component={Authentication} />
-            <Route path="/lysts/:id" component={ListDetail} />
-          </AuthProvider>
-        </BrowserRouter>
+    <ThemeProvider theme={hpTheme}>
+      <Grommet
+        theme={darkMode ? darkTheme : hpTheme}
+        themeMode={darkMode ? "dark" : "light"}
+        {...(!darkMode ? { background: "light-1" } : {})}
+        full
+      >
+        <StoreProvider store={store}>
+          <BrowserRouter>
+            <AuthProvider>
+              <GuestProfileProvider>
+                <Switch>
+                  <Route path="/" exact render={() => <Redirect to="/lysts" />} />
+                  <AuthenticatedRoute noAnonymous path="/lysts" exact component={Lists} />
+                  <Route path="/login" component={Authentication} />
+                  <Route path="/lysts/:id" component={ListDetail} />
+                  <AuthenticatedRoute path="/claimed" component={ClaimedItems} />
+                  <AuthenticatedRoute path="/my-account" component={Account} />
+                </Switch>
+              </GuestProfileProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </StoreProvider>
       </Grommet>
     </ThemeProvider>
   );

@@ -11,24 +11,24 @@ export const getImagesFromUrl = functions.runWith({ memory: "1GB" }).https.onCal
     args: chromium.args,
     defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath,
-    headless: chromium.headless,
+    headless: chromium.headless
   });
   const page = await browser.newPage();
   const close = () => closePage(browser);
 
   await page.setRequestInterception(true);
   const ignore: puppeteer.ResourceType[] = ["image", "stylesheet"];
-  page.on("request", (req) => (ignore.includes(req.resourceType()) ? req.abort() : req.continue()));
+  page.on("request", req => (ignore.includes(req.resourceType()) ? req.abort() : req.continue()));
   await page.goto(url, { waitUntil: "networkidle2" });
 
   try {
-    const [image, title, description] = await Promise.all(
-      ["image", "title", "description"].map((graphName) => {
+    const [image, title, description, mimeType] = await Promise.all(
+      ["image", "title", "description", "image:type"].map(graphName => {
         return page.$eval<string>(`head > meta[name='og:${graphName}']`, (element: Element) => (element as HTMLMetaElement).content);
       })
     );
     await close();
-    return { image, title, description };
+    return { image, title, description, mimeType };
   } catch (e) {
     await close();
     throw new functions.https.HttpsError("internal", "error fetching open graph images");

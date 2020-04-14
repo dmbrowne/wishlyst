@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, FC, useContext } from "react";
-import { Box, TextInput, FormField, Button, Text, ThemeContext } from "grommet";
+import { Box, TextInput, FormField, Text, ThemeContext, Button } from "grommet";
 import { Google, Twitter, Facebook } from "grommet-icons";
 import styled from "styled-components";
 import { RouteComponentProps } from "react-router-dom";
@@ -10,10 +10,10 @@ import asyncCatch from "../utils/async-catch";
 import withHoverableIcon from "../components/hoverable-icon";
 import { ReactComponent as Logo } from "../icons/wishlystlogo.svg";
 
-const SAuthContainer = styled(Box).attrs((props) => ({
+const SAuthContainer = styled(Box).attrs(props => ({
   width: { max: "750px" },
   border: true,
-  pad: "large",
+  pad: "large"
 }))`
   width: 100%;
   border-radius: 16px;
@@ -23,15 +23,15 @@ const STextError = styled(Text).attrs(() => ({
   size: "small",
   margin: { top: "xsmall", bottom: "medium" },
   color: "status-error",
-  textAlign: "center",
+  textAlign: "center"
 }))``;
 
 const SLogoContainer = styled(Box).attrs(() => ({
   width: "250px",
   margin: { horizontal: "large", bottom: "large" },
-  alignSelf: "center",
+  alignSelf: "center"
 }))`
-  color: ${(props) => props.theme.global?.colors?.brand || "#000"};
+  color: ${props => props.theme.global?.colors?.brand || "#000"};
 `;
 
 const GoogleIcon = withHoverableIcon(Google);
@@ -52,7 +52,7 @@ const Authentication: FC<RouteComponentProps> = ({ history }) => {
   const { current: facebookProvider } = useRef(new auth.FacebookAuthProvider());
 
   useEffect(() => {
-    return auth().onAuthStateChanged((account) => {
+    return auth().onAuthStateChanged(account => {
       if (account) history.push("/");
     });
   });
@@ -105,11 +105,11 @@ const Authentication: FC<RouteComponentProps> = ({ history }) => {
         <SAuthContainer alignSelf="center" background={isDarkMode ? "#000" : "white"}>
           <SLogoContainer children={<Logo />} />
           <FormField label="Email">
-            <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={!!signInMode} />
+            <TextInput type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={!!signInMode} />
           </FormField>
           {!!signInMode && (
             <FormField label={signInMode === "login" ? "Enter your password" : "Create new password"} error={localAuthError}>
-              <TextInput type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <TextInput type="password" value={password} onChange={e => setPassword(e.target.value)} />
             </FormField>
           )}
           <Box direction="row" align="center" justify="center" margin={{ top: "small", bottom: "large" }} gap="small">

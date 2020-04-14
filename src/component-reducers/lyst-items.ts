@@ -1,27 +1,6 @@
-type TClaimant =
-  | {
-      userId: string;
-      name?: undefined;
-      email?: undefined;
-    }
-  | {
-      userId?: undefined;
-      name: string;
-      email: string;
-    };
+import { ILystItem } from "./../store/types";
 
-export interface ILystItem {
-  id: string;
-  title: string;
-  url?: string;
-  description?: string;
-  thumb?: string;
-  claimant?: TClaimant[] | null;
-  quantity: number;
-  categoryIds?: string[];
-}
-
-interface IReducerState {
+export interface IReducerState {
   allItems: {
     [id: string]: ILystItem;
   };
@@ -31,23 +10,28 @@ interface IReducerState {
   };
 }
 
-const initialState: IReducerState = {
+export const initialState: IReducerState = {
   allItems: {},
   order: [],
-  byCategoryId: {}
+  byCategoryId: {},
 };
 
 export const fetchItemSuccess = (lystItem: ILystItem) => ({
   type: "FETCH_ITEM" as "FETCH_ITEM",
-  payload: lystItem
+  payload: lystItem,
+});
+
+export const removeItem = (lystItemId: string) => ({
+  type: "REMOVE_ITEM" as "REMOVE_ITEM",
+  payload: lystItemId,
 });
 
 export const setOrder = (ids: string[]) => ({
   type: "SET_ORDER" as "SET_ORDER",
-  payload: ids
+  payload: ids,
 });
 
-type TAction = ReturnType<typeof fetchItemSuccess> | ReturnType<typeof setOrder>;
+type TAction = ReturnType<typeof fetchItemSuccess> | ReturnType<typeof setOrder> | ReturnType<typeof removeItem>;
 
 function LystItemsReducer(state = initialState, action: TAction) {
   switch (action.type) {
@@ -56,13 +40,17 @@ function LystItemsReducer(state = initialState, action: TAction) {
         ...state,
         allItems: {
           ...state.allItems,
-          [action.payload.id]: action.payload
-        }
+          [action.payload.id]: action.payload,
+        },
       };
+    case "REMOVE_ITEM":
+      const allItems = { ...state.allItems };
+      delete allItems[action.payload];
+      return { ...state, allItems };
     case "SET_ORDER":
       return {
         ...state,
-        order: action.payload
+        order: action.payload,
       };
     default:
       return state;

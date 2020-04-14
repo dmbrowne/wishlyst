@@ -1,29 +1,42 @@
-import React, { useState, useEffect, FC, useRef } from "react";
+import React, { useState, useEffect, FC, useRef, useContext } from "react";
 import TopNavbar from "../components/top-navbar";
 import GridListing from "../styled-components/grid-listing";
-import { Box, Button, Text, FormField, TextInput, Heading } from "grommet";
+import { Box, Text, FormField, TextInput, Heading, Button } from "grommet";
 import { firestore, auth } from "firebase";
 import { Add } from "grommet-icons";
 import Modal from "../components/modal";
 import { RouteComponentProps } from "react-router-dom";
+import StandardLayout from "../layouts/standard";
+import SRoundedCard from "../styled-components/rounded-card";
+import { FabButton } from "../styled-components/fab-button";
+import { useStateSelector } from "../store";
+import { myLystsSelector } from "../selectors";
+import { useDispatch } from "react-redux";
+import { lystAdded, setMyLystsOrder } from "../store/lysts";
+import { ILyst } from "../store/types";
+import { AuthContext } from "../context/auth";
 
 const Lists: FC<RouteComponentProps> = ({ history }) => {
+  const dispatch = useDispatch();
   const { current: db } = useRef(firestore());
-  const [lysts, setLysts] = useState<{ [key: string]: any }[]>([]);
-  const [fetchStatus, setFetchStatus] = useState<"inital" | "success" | "error">("inital");
+  const { account } = useContext(AuthContext);
+  const lysts = useStateSelector(myLystsSelector);
   const [newLystModal, setNewLystModal] = useState(false);
   const [newLystName, setNewLystName] = useState("");
   const [newLystError, setNewLystError] = useState("");
 
   useEffect(() => {
-    firestore()
-      .collection("lysts")
+    if (!account) return;
+    db.collection("lysts")
+      .where("_private.owner", "==", account.uid)
       .get()
       .then(snap => {
-        setFetchStatus("success");
-        setLysts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        snap.docChanges().forEach(({ doc, type }) => {
+          if (type === "added") dispatch(lystAdded({ id: doc.id, ...(doc.data() as ILyst) }));
+        });
+        dispatch(setMyLystsOrder(snap.docs.map(({ id }) => id)));
       });
-  }, []);
+  }, [account]);
 
   const onSubmitNewLyst = () => {
     const user = auth().currentUser;
@@ -32,13 +45,15 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
     if (!user) return history.push("/login");
 
     const newLystRef = db.collection("lysts").doc();
-    newLystRef.set({
+    const newLyst: Omit<ILyst, "id"> = {
       name: newLystName,
+      public: true,
       createdAt: firestore.Timestamp.now(),
       _private: {
-        owner: user.uid
-      }
-    });
+        owner: user.uid,
+      },
+    };
+    newLystRef.set(newLyst);
     history.push(`/lysts/${newLystRef.id}`);
   };
 
@@ -48,26 +63,24 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
   };
 
   return (
-    <>
-      <TopNavbar />
-      <Box pad="medium">
+    <StandardLayout>
+      <Heading level={1} children="My Wishlysts" />
+
+      {!account || account.isAnonymous ? (
+        <Text size="large">You need to sign up for an account or login if you want to start creating wishlysts</Text>
+      ) : (
         <GridListing>
           {lysts &&
             lysts.map(lyst => (
-              <Box key={lyst.id} elevation="small" background="white" height="200px" onClick={() => history.push(`/lysts/${lyst.id}`)}>
+              <SRoundedCard key={lyst.id} height="200px" onClick={() => history.push(`/lysts/${lyst.id}`)}>
                 <Heading level="4">{lyst.name}</Heading>
-              </Box>
+              </SRoundedCard>
             ))}
           <Box align="center" justify="center">
-            <Button style={{ textAlign: "center" }} onClick={() => setNewLystModal(true)}>
-              <Box pad="small" background="white" elevation="small" style={{ display: "inline-flex", borderRadius: "50%" }}>
-                <Add color="accent-1" size="large" />
-              </Box>
-              <Text style={{ display: "flex" }}>Add new lyst</Text>
-            </Button>
+            <FabButton label="Add new lyst" icon={<Add size="large" />} onClick={() => setNewLystModal(true)} />
           </Box>
         </GridListing>
-      </Box>
+      )}
       {newLystModal && (
         <Modal
           title="Create a new wishlyst"
@@ -79,7 +92,7 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
           </FormField>
         </Modal>
       )}
-    </>
+    </StandardLayout>
   );
 };
 

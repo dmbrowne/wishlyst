@@ -1,33 +1,90 @@
-import React, { useState, FC } from "react";
-import { auth, firestore } from "firebase";
+import React, { useState, FC, useEffect } from "react";
+import { auth, firestore } from "firebase/app";
+import { IUser, IClaimedItem } from "../store/types";
 
-interface IUser {
-  id: string;
-  email: string;
-  displayName?: string;
-}
+type TUnsubscribe = () => void;
 
 export const AuthContext = React.createContext<{
   account: firebase.User | null;
   user: IUser | null;
+  listenToClaimedItems: (lystId: string) => TUnsubscribe;
 }>({
   account: null,
   user: null,
+  listenToClaimedItems: () => () => {},
 });
 
 export const AuthProvider: FC = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [account, setAccount] = useState<firebase.User | null>(null);
+  const [userUnsubscribe, setUserUnsubscribe] = useState(() => () => {});
 
-  auth().onAuthStateChanged(async (account) => {
-    setAccount(account);
+  useEffect(() => {
+    return auth().onAuthStateChanged(accnt => {
+      setAccount(accnt);
+    });
+  }, []);
+
+  useEffect(() => {
     if (account) {
-      const fsUser = await firestore().doc(`users/${account.uid}`).get();
-      setUser({ id: fsUser.id, ...(fsUser.data() as IUser) });
+      if (!account.isAnonymous) {
+        return firestore()
+          .doc(`users/${account.uid}`)
+          .onSnapshot(userSnap => {
+            setUser({ id: userSnap.id, ...(userSnap.data() as Omit<IUser, "id" | "claimedItems">) });
+          });
+      }
     } else {
       setUser(null);
     }
-  });
+  }, [account]);
 
-  return <AuthContext.Provider value={{ user, account }}>{children}</AuthContext.Provider>;
+  const listenToClaimedItems = (lystId: string) => {
+    if (!user) return () => {};
+
+    return firestore()
+      .doc(`users/${user.id}`)
+      .collection(`claimedItems`)
+      .where("lystId", "==", lystId)
+      .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(({ type, doc }) => {
+          switch (type) {
+            case "added":
+              return {
+                ...user,
+                claimedItems: {
+                  ...(user.claimedItems || {}),
+                  [doc.id]: doc.data(),
+                },
+              };
+            case "modified":
+              return {
+                ...user,
+                claimedItems: {
+                  ...(user.claimedItems || {}),
+                  [doc.id]: {
+                    ...(user.claimedItems?.[doc.id] || {}),
+                    ...doc.data(),
+                  },
+                },
+              };
+            case "removed": {
+              const claimedItems = user.claimedItems;
+              if (!claimedItems) return user;
+              return {
+                ...user,
+                claimedItems: Object.keys(claimedItems).reduce((accum, lystItemId) => {
+                  const claimedItem = claimedItems[lystItemId];
+                  return lystItemId === doc.id ? accum : { ...accum, [lystItemId]: claimedItem };
+                }, {} as { [id: string]: IClaimedItem }),
+              };
+            }
+            default:
+              break;
+          }
+        });
+      });
+  };
+
+  return <AuthContext.Provider value={{ user, account, listenToClaimedItems }}>{children}</AuthContext.Provider>;
 };

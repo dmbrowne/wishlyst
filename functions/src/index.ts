@@ -1,6 +1,16 @@
 import * as admin from "firebase-admin";
 
+import { createUserProfileOnAccountCreate, doesAccountExist, updateAccountProfile } from "./auth";
+import { getImagesFromUrl } from "./puppeteer";
+import { generateThumbnails, removeImageAndThumbsOnLystItemDelete } from "./images";
+
 admin.initializeApp();
 
-export { createUserProfileOnAccountCreate, doesAccountExist } from "./auth";
-export { getImagesFromUrl } from "./puppeteer";
+module.exports = {
+  createUserProfileOnAccountCreate,
+  doesAccountExist,
+  updateAccountProfile,
+  getImagesFromUrl,
+  generateThumbnails,
+  removeImageAndThumbsOnLystItemDelete
+};

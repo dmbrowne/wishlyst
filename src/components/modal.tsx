@@ -1,19 +1,19 @@
 import React, { FC } from "react";
-import { Layer, Box, Button, Heading } from "grommet";
+import { Layer, Box, Heading, Button, BoxTypes } from "grommet";
 import { Close } from "grommet-icons";
 
-interface IProps {
+interface IProps extends BoxTypes {
   title?: string;
   onClose: () => void;
   primaryActions?: Array<{ label: string; onClick: () => void }>;
   secondaryActions?: Array<{ label: string; onClick: () => void }>;
 }
 
-const Modal: FC<IProps> = ({ onClose, title, primaryActions, secondaryActions, children }) => {
+const Modal: FC<IProps> = ({ onClose, title, primaryActions, secondaryActions, children, ...props }) => {
   const hasActions = !!primaryActions || !!secondaryActions;
   return (
     <Layer>
-      <Box width="600px" pad="medium">
+      <Box width={{ min: "700px" }} pad="medium" style={{ display: "block" }} {...props}>
         <Box direction="row" justify="between" align="center" margin={{ bottom: "medium" }}>
           {title && <Heading margin="none" level={3} children={title} />}
           <Button icon={<Close />} onClick={onClose} />

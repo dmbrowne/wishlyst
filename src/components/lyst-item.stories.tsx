@@ -6,7 +6,7 @@ export default {
   component: LystItem
 };
 
-export const NoImage = () => <LystItem title="Item A" quantity={1} />;
+export const NoImage = () => <LystItem name="Item A" quantity={1} />;
 NoImage.story = {
   name: "No image"
 };
