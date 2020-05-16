@@ -4,21 +4,14 @@ import { ICategory } from "./../store/types";
 interface IReducerState {
   categoriesOrder: string[];
   categories: { [id: string]: ICategory };
-  anonymousUsers: {
-    [uid: string]: string; //displayName
-  };
+  filteredCategories: string[];
 }
 
 export const initialState: IReducerState = {
   categoriesOrder: [],
+  filteredCategories: [],
   categories: {},
-  anonymousUsers: {},
 };
-
-export const anonymousUsersFetch = (users: { [uid: string]: string }) => ({
-  type: "FETCHED_ANONYMOUS_USERS" as "FETCHED_ANONYMOUS_USERS",
-  payload: users,
-});
 
 export const categoriesFetched = (categories: { [id: string]: ICategory }) => ({
   type: "FETCHED_CATEGORIES" as "FETCHED_CATEGORIES",
@@ -30,6 +23,11 @@ export const setCategoriesOrder = (order: string[]) => ({
   payload: order,
 });
 
+export const setFilteredCategories = (cats: string[]) => ({
+  type: "SET_FILTERED_CATEGORIES" as "SET_FILTERED_CATEGORIES",
+  payload: cats,
+});
+
 export const categoriesSelector = createSelector<IReducerState, { [id: string]: ICategory }, string[], ICategory[]>(
   state => state.categories,
   state => state.categoriesOrder,
@@ -38,7 +36,7 @@ export const categoriesSelector = createSelector<IReducerState, { [id: string]: 
   }
 );
 
-type TAction = ReturnType<typeof anonymousUsersFetch> | ReturnType<typeof categoriesFetched> | ReturnType<typeof setCategoriesOrder>;
+type TAction = ReturnType<typeof categoriesFetched> | ReturnType<typeof setCategoriesOrder> | ReturnType<typeof setFilteredCategories>;
 
 const lystReducer = (state = initialState, action: TAction) => {
   switch (action.type) {
@@ -46,8 +44,8 @@ const lystReducer = (state = initialState, action: TAction) => {
       return { ...state, categoriesOrder: action.payload };
     case "FETCHED_CATEGORIES":
       return { ...state, categories: action.payload };
-    case "FETCHED_ANONYMOUS_USERS":
-      return { ...state, anonymousUsers: action.payload };
+    case "SET_FILTERED_CATEGORIES":
+      return { ...state, filteredCategories: action.payload };
     default:
       return state;
   }

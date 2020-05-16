@@ -1,9 +1,12 @@
+import "./polyfills";
+
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./main";
 import * as serviceWorker from "./service-worker";
 import "./firebase";
+
 ReactDOM.render(
   <React.StrictMode>
     <App />

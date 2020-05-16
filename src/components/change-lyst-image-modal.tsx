@@ -1,0 +1,67 @@
+import React, { FC, useState } from "react";
+import Modal from "./modal";
+import SObjectFitImage from "../styled-components/object-fit-image";
+import FirebaseImage from "./firebase-image";
+import { Box, Tabs, Tab } from "grommet";
+import FileInput from "./file-input";
+import ImageUpload from "./image-upload-container";
+
+interface Props {
+  onClose: () => void;
+  activeRef?: string;
+  customUploadRef: string;
+  onSubmit: (ref: string) => any;
+}
+
+const ChangeLystImageModal: FC<Props> = ({ onClose, activeRef, onSubmit, customUploadRef }) => {
+  const [selected, setSelected] = useState("");
+
+  const stockImageRefs = [
+    "defaults/lyst_images/stock-gifts.svg",
+    "defaults/lyst_images/jfbv_qmpo_171226.jpg",
+    "defaults/lyst_images/cakes.svg",
+  ];
+
+  return (
+    <Modal
+      title="Change lyst image"
+      onClose={onClose}
+      primaryActions={[
+        { label: "Change", onClick: () => onSubmit(selected) },
+        { label: "Cancel", onClick: onClose },
+      ]}
+    >
+      <Tabs>
+        <Tab title="Library">
+          <Box gap="medium" margin={{ top: "large" }} direction="row">
+            {stockImageRefs.map(imageRef => {
+              const isActive = activeRef === imageRef;
+              const isSelected = imageRef === selected;
+              return (
+                <Box
+                  onClick={() => setSelected(imageRef)}
+                  style={{ width: "25%", height: 150, borderRadius: 12, overflow: "hidden" }}
+                  border={isActive ? { size: "5px", color: "brand" } : isSelected ? { color: "brand" } : true}
+                >
+                  <FirebaseImage imageRef={imageRef} children={url => <SObjectFitImage src={url} />} />
+                </Box>
+              );
+            })}
+          </Box>
+        </Tab>
+        <Tab title="Upload your own">
+          <Box margin={{ top: "large" }} height="300px">
+            <ImageUpload
+              noThumbnailGeneration
+              uploadRefPath={customUploadRef}
+              name="lyst-header"
+              onUploadSuccess={() => onSubmit(customUploadRef)}
+            />
+          </Box>
+        </Tab>
+      </Tabs>
+    </Modal>
+  );
+};
+
+export default ChangeLystImageModal;

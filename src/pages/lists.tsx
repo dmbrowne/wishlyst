@@ -1,12 +1,10 @@
 import React, { useState, useEffect, FC, useRef, useContext } from "react";
-import TopNavbar from "../components/top-navbar";
 import GridListing from "../styled-components/grid-listing";
-import { Box, Text, FormField, TextInput, Heading, Button } from "grommet";
-import { firestore, auth } from "firebase";
-import { Add } from "grommet-icons";
+import { Box, Text, FormField, TextInput, Heading, Button, ThemeContext } from "grommet";
+import { firestore, auth } from "firebase/app";
+import { Add, StatusWarning } from "grommet-icons";
 import Modal from "../components/modal";
 import { RouteComponentProps } from "react-router-dom";
-import StandardLayout from "../layouts/standard";
 import SRoundedCard from "../styled-components/rounded-card";
 import { FabButton } from "../styled-components/fab-button";
 import { useStateSelector } from "../store";
@@ -14,16 +12,18 @@ import { myLystsSelector } from "../selectors";
 import { useDispatch } from "react-redux";
 import { lystAdded, setMyLystsOrder } from "../store/lysts";
 import { ILyst } from "../store/types";
-import { AuthContext } from "../context/auth";
+import { useTheme } from "styled-components";
+import { Helmet } from "react-helmet";
 
 const Lists: FC<RouteComponentProps> = ({ history }) => {
   const dispatch = useDispatch();
   const { current: db } = useRef(firestore());
-  const { account } = useContext(AuthContext);
+  const { account, initialFetched } = useStateSelector(({ auth }) => auth);
   const lysts = useStateSelector(myLystsSelector);
   const [newLystModal, setNewLystModal] = useState(false);
   const [newLystName, setNewLystName] = useState("");
   const [newLystError, setNewLystError] = useState("");
+  const { dark } = useTheme();
 
   useEffect(() => {
     if (!account) return;
@@ -62,12 +62,52 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
     setNewLystName(val);
   };
 
+  if (!initialFetched) return null;
+
   return (
-    <StandardLayout>
-      <Heading level={1} children="My Wishlysts" />
+    <>
+      <Helmet>
+        <title>My wishlysts - Wishlyst</title>
+      </Helmet>
+      <Heading
+        level={1}
+        margin={{ horizontal: "auto" }}
+        children="My Wishlysts"
+        textAlign={!account || account.isAnonymous ? "center" : "start"}
+      />
 
       {!account || account.isAnonymous ? (
-        <Text size="large">You need to sign up for an account or login if you want to start creating wishlysts</Text>
+        <Box margin={{ top: "10vh" }}>
+          <Box style={{ opacity: 0.7 }} align="center" gap="small">
+            <StatusWarning size="128px" />
+            <Text size="large" textAlign="center">
+              You need to sign up for an account or login to create and edit wishlysts
+            </Text>
+          </Box>
+          <ThemeContext.Extend
+            value={{
+              global: {
+                colors: { text: { light: "#f6f6f6" } },
+                hover: { color: { light: "#fff" } },
+              },
+              button: {
+                padding: {
+                  vertical: "12px",
+                  horizontal: "48px",
+                },
+              },
+            }}
+          >
+            <Button
+              margin={{ top: "medium" }}
+              alignSelf="center"
+              color="brand"
+              onClick={() => history.push("/login")}
+              primary
+              label="Register / Login"
+            />
+          </ThemeContext.Extend>
+        </Box>
       ) : (
         <GridListing>
           {lysts &&
@@ -81,6 +121,7 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
           </Box>
         </GridListing>
       )}
+
       {newLystModal && (
         <Modal
           title="Create a new wishlyst"
@@ -92,7 +133,7 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
           </FormField>
         </Modal>
       )}
-    </StandardLayout>
+    </>
   );
 };
 

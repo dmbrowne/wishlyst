@@ -13,21 +13,25 @@ const AuthenticatedClaimModalContent: FC<IProps> = ({ multi, maxQuantity, totalQ
   const [claimAmount, setClaimAmount] = useState(1);
   return (
     <>
-      <Box align="center">
-        <Text margin={{ horizontal: "medium" }} textAlign="center">
-          Out of the {totalQuantity} wanted,
-        </Text>
-        {multi && (
+      <Box align="center" margin={{ bottom: "medium" }}>
+        {multi ? (
           <>
-            <Text margin={{ horizontal: "medium", bottom: "medium" }} textAlign="center">
+            <Text margin={{ horizontal: "medium" }} textAlign="center">
+              Out of {totalQuantity} wanted,{" "}
               {maxQuantity > 1
                 ? `there are ${maxQuantity} left to be claimed, how many would you like to get?`
                 : "this is the last one available to be claimed"}
             </Text>
-            <Box align="center" margin={{ bottom: "large" }}>
-              {maxQuantity > 1 && <Counter min={1} max={maxQuantity} value={claimAmount} onChange={setClaimAmount} />}
-            </Box>
+            {maxQuantity > 1 && (
+              <Box align="center" margin={{ top: "medium" }}>
+                <Counter min={1} max={maxQuantity} value={claimAmount} onChange={setClaimAmount} />
+              </Box>
+            )}
           </>
+        ) : (
+          <Text margin={{ horizontal: "medium" }} textAlign="center">
+            Are you sure you want to claim this item?
+          </Text>
         )}
       </Box>
       <Button primary label="Claim" onClick={() => onClaim(claimAmount)} />

@@ -1,116 +1,91 @@
 import React, { FC, useContext, useEffect, useRef, useState } from "react";
 import { firestore } from "firebase/app";
-import { Heading, Text, Box, Button, Tabs, Tab } from "grommet";
+import { Heading, Text, Box, Button, Tabs, Tab, Paragraph } from "grommet";
 import qs from "query-string";
 
-import { AuthContext } from "../context/auth";
-import StandardLayout from "../layouts/standard";
-import { ReactComponent as GiftsImg } from "../icons/gifts.svg";
 import LystHeader from "./lyst-header";
-import { ICategory } from "../@types";
-import { orderedLystItemsSelector } from "../selectors";
-import GridListing from "../styled-components/grid-listing";
-import LystItemClaimCard from "./lyst-item-claim-card";
 import ClaimItemModal from "./claim-item-modal";
 import useLystItemActions from "../hooks/use-lyst-item-actions";
-import GuestClaimedItems from "./guest-claimed-items";
-import Spinner from "./spinner";
 import { ILystItem, ILyst } from "../store/types";
 import { useStateSelector } from "../store";
-import { useDispatch } from "react-redux";
-import { fetchItemSuccess, removeItem, setOrderForLyst } from "../store/lyst-items";
-import ClaimedLystItemsGuestListing from "./claimed-lyst-items-guest-listing";
-import ClaimedLystItemsUserListing from "./claimed-lyst-items-user-listing";
+import { useDispatch, useStore } from "react-redux";
 import { useLocation, useHistory, useRouteMatch } from "react-router-dom";
-import useUserClaimedItems from "../hooks/use-user-claimed-items";
 import Modal from "./modal";
 import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-content";
+import FirebaseImage from "./firebase-image";
+import SObjectFitImage from "../styled-components/object-fit-image";
+import LystItemCardGridLayout from "./lyst-item-card-grid-layout";
+import { IRootReducer } from "../store/combined-reducers";
 
 interface IProps {
   lyst: ILyst;
-  categories: ICategory[];
-  anonymousUsers: {
-    [uid: string]: string; //uid
-  };
+  onFilter?: () => any;
+  lystItems: ILystItem[];
 }
 
-const ListDetail: FC<IProps> = ({ lyst, categories }) => {
-  const dispatch = useDispatch();
+const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems }) => {
+  const { current: db } = useRef(firestore());
   const location = useLocation();
   const history = useHistory();
-  const match = useRouteMatch();
+  const store = useStore<IRootReducer>();
   const queryMap = qs.parse(location.search);
 
-  const { current: db } = useRef(firestore());
-  const { account, user } = useContext(AuthContext);
-
-  const lystRef = db.doc(`/lysts/${lyst.id}`);
-  const lystItemsRef = lystRef.collection(`lystItems`);
-
-  // lystItem listeners started from the 'mine' lystMode
-  const [individualUnsubscribers, setIndividualUnsubscribers] = useState<(() => void)[]>([]);
   const [claimModalItem, setClaimModalItem] = useState<ILystItem | void>();
-  const [viewMode, setViewMode] = useState(queryMap.view || "");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [viewLystItem, setViewLystItem] = useState<ILystItem | void>();
   const [bookmarkLogin, setBookmarkLogin] = useState(false);
 
-  const lystItems = useStateSelector(orderedLystItemsSelector);
+  const { account, user } = useStateSelector(({ auth }) => auth);
   const { claim, removeClaim } = useLystItemActions(lyst.id);
-  const { loadMore, hasMore, items } = useUserClaimedItems(lyst.id, selectedCategories);
-
-  useEffect(() => () => individualUnsubscribers.forEach(unsubscribe => unsubscribe()), []);
 
   useEffect(() => {
-    let q: firestore.Query<firestore.DocumentData> | firestore.CollectionReference<firestore.DocumentData> = lystItemsRef;
-
-    if (selectedCategories && selectedCategories.length) {
-      q = q.where("categoryId", "in", selectedCategories);
+    if (queryMap.claim && account) {
+      const lystItem = lystItems.find(item => item.id === queryMap.claim);
+      if (!lystItem) return;
+      if (lystItem.claimants?.length === lystItem.quantity) return;
+      setClaimModalItem(lystItem);
     }
-
-    return q.orderBy("createdAt", "asc").onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(({ type, doc }) => {
-        if (type === "added" || type === "modified") dispatch(fetchItemSuccess({ id: doc.id, ...(doc.data() as ILystItem) }));
-        if (type === "removed") dispatch(removeItem(doc.id));
-      });
-
-      dispatch(
-        setOrderForLyst(
-          lyst.id,
-          snapshot.docs.map(doc => doc.id)
-        )
-      );
-    });
-  }, [selectedCategories]);
-
-  const onChangeTab = (idx: number) => {
-    history.replace(`${match.url}?${qs.stringify({ ...queryMap, view: idx === 0 ? "all" : "mine" })}`);
-    setViewMode(idx === 0 ? "all" : "mine");
-  };
-
-  const selectCategory = (categoryId: string) => {
-    const cats = [...selectedCategories];
-    const existingIdx = selectedCategories.indexOf(categoryId);
-
-    if (existingIdx >= 0) cats.splice(existingIdx, 1);
-    else cats.push(categoryId);
-
-    setSelectedCategories(cats);
-  };
+  }, [account]);
 
   const updateBookmark = (save: boolean) => {
-    if (!user) {
-      setBookmarkLogin(true);
-      return;
-    }
-    // const save = user.bookmarked?.includes(lyst.id);
+    if (!user) return setBookmarkLogin(true);
     const operation = save ? firestore.FieldValue.arrayUnion : firestore.FieldValue.arrayRemove;
     db.doc(`users/${user.id}`).update({ bookmarked: operation(lyst.id) });
   };
 
-  const showCategories = (account && account.isAnonymous) || viewMode !== "mine";
+  const closeClaimModal = () => {
+    setClaimModalItem();
+    const queryString = { ...queryMap };
+    if (queryString.claim) {
+      delete queryString.claim;
+      const query = qs.stringify(queryString) || "";
+      history.replace(location.pathname + `?${query}`);
+    }
+  };
+
+  const onClaim = (itemId: string) => {
+    const lystItem = store.getState().lystItems.allItems[itemId];
+    if (!lystItem) return;
+    lystItem.quantity > 1 || !account ? setClaimModalItem(lystItem) : claim(lystItem.id);
+  };
+
+  const onView = (itemId: string) => {
+    const lystItem = store.getState().lystItems.allItems[itemId];
+    if (!lystItem) return;
+    setViewLystItem(lystItem);
+  };
+
+  const onRemoveClaim = (itemId: string) => {
+    if (!account) return;
+    const lystItem = store.getState().lystItems.allItems[itemId];
+    if (!lystItem) return;
+
+    if (lystItem.claimants?.includes(account.uid)) {
+      removeClaim(account.uid, account.isAnonymous, lystItem.id);
+    }
+  };
 
   return (
-    <StandardLayout>
+    <>
       <Box align="center">
         <LystHeader
           lyst={lyst}
@@ -120,65 +95,16 @@ const ListDetail: FC<IProps> = ({ lyst, categories }) => {
           }}
         />
       </Box>
-      <Box>
-        <Tabs margin={{ top: "large" }} onActive={onChangeTab}>
-          <Tab title="All items" style={viewMode !== "mine" ? { fontWeight: 700 } : {}} />
-          <Tab title="Items claimed by me" style={viewMode === "mine" ? { fontWeight: 700 } : {}} />
-        </Tabs>
-      </Box>
-      {showCategories && (
-        <Box direction="row" gap="medium" margin={{ top: "medium" }}>
-          {categories.map(category => (
-            <Button
-              key={category.id}
-              primary={selectedCategories.includes(category.id)}
-              label={category.label}
-              color="dark-3"
-              style={{ borderRadius: 20 }}
-              onClick={() => selectCategory(category.id)}
-            />
-          ))}
-        </Box>
-      )}
       {lystItems.length > 0 && (
         <Box margin={{ top: "large" }}>
-          <GridListing>
-            {viewMode === "mine" ? (
-              account ? (
-                account.isAnonymous ? (
-                  <ClaimedLystItemsGuestListing
-                    lystId={lyst.id}
-                    onStartListener={unsubscribe => setIndividualUnsubscribers([...individualUnsubscribers, unsubscribe])}
-                    onClaim={lystItem => (lystItem.quantity > 1 || !account ? setClaimModalItem(lystItem) : claim(lystItem.id))}
-                    onRemoveClaim={removeClaim}
-                  />
-                ) : (
-                  <ClaimedLystItemsUserListing
-                    loadMore={loadMore}
-                    hasMore={hasMore}
-                    items={items}
-                    lystId={lyst.id}
-                    onClaim={lystItem => (lystItem.quantity > 1 || !account ? setClaimModalItem(lystItem) : claim(lystItem.id))}
-                    onRemoveClaim={removeClaim}
-                  />
-                )
-              ) : (
-                <Text>Please sign in to view your claimed items</Text>
-              )
-            ) : (
-              lystItems.map(lystItem => (
-                <LystItemClaimCard
-                  key={lystItem.id}
-                  lystItem={lystItem}
-                  claimed={(lystItem.claimants && lystItem.claimants.length >= lystItem.quantity) || false}
-                  onClaim={() => (lystItem.quantity > 1 || !account ? setClaimModalItem(lystItem) : claim(lystItem.id))}
-                  onRemoveClaim={
-                    account && lystItem.claimants?.includes(account.uid) ? quantity => removeClaim(lystItem.id, quantity) : undefined
-                  }
-                />
-              ))
-            )}
-          </GridListing>
+          <LystItemCardGridLayout
+            isOwner={false}
+            lystItems={lystItems}
+            onClaim={onClaim}
+            onView={onView}
+            onFilter={onFilter}
+            onRemoveClaim={onRemoveClaim}
+          />
         </Box>
       )}
       {lystItems.length === 0 && (
@@ -186,11 +112,6 @@ const ListDetail: FC<IProps> = ({ lyst, categories }) => {
           <Heading level={4} textAlign="center">
             <em>No items added to this list yet</em>
           </Heading>
-          <Box width={{ max: "800px" }} margin={{ top: "large" }} style={{ width: "100%" }}>
-            <Text as="span" color="dark-6">
-              <GiftsImg />
-            </Text>
-          </Box>
         </Box>
       )}
       {bookmarkLogin && (
@@ -203,12 +124,23 @@ const ListDetail: FC<IProps> = ({ lyst, categories }) => {
           lystItem={claimModalItem}
           onClaim={quantity => {
             claim(claimModalItem.id, quantity);
-            setClaimModalItem();
+            closeClaimModal();
           }}
-          onClose={() => setClaimModalItem()}
+          onClose={closeClaimModal}
         />
       )}
-    </StandardLayout>
+      {viewLystItem && (
+        <Modal title="Item details" onClose={() => setViewLystItem()}>
+          {viewLystItem.thumb ? (
+            <FirebaseImage imageRef={viewLystItem.thumb}>{url => <SObjectFitImage src={url} />}</FirebaseImage>
+          ) : (
+            <Box background="light-6" pad="large" align="center" justify="center" children={<Text>No Image</Text>} />
+          )}
+          <Heading level={5} children={viewLystItem.name} />
+          <Paragraph children={viewLystItem.description} />
+        </Modal>
+      )}
+    </>
   );
 };
 

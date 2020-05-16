@@ -1,16 +1,23 @@
 import * as admin from "firebase-admin";
 
-import { createUserProfileOnAccountCreate, doesAccountExist, updateAccountProfile } from "./auth";
+import { createUserProfile, doesAccountExist, updateAccountProfile, ugradeAnnoymousUser } from "./auth";
 import { getImagesFromUrl } from "./puppeteer";
-import { generateThumbnails, removeImageAndThumbsOnLystItemDelete } from "./images";
+import { generateThumbnails, removeImageAndThumbsOnLystItemDelete, convertToSingleThumb, removeImageThumbsOnRemove } from "./images";
+import { deleteAllLystItems, deleteAllAnonymousUsers, removeCategoriesFromLystItem } from "./triggers";
 
 admin.initializeApp();
 
 module.exports = {
-  createUserProfileOnAccountCreate,
+  createUserProfile,
   doesAccountExist,
   updateAccountProfile,
   getImagesFromUrl,
   generateThumbnails,
-  removeImageAndThumbsOnLystItemDelete
+  removeImageAndThumbsOnLystItemDelete,
+  convertToSingleThumb,
+  ugradeAnnoymousUser,
+  removeImageThumbsOnRemove,
+  deleteAllLystItems,
+  deleteAllAnonymousUsers,
+  removeCategoriesFromLystItem,
 };

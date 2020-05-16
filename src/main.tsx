@@ -1,12 +1,12 @@
 import React from "react";
 import { ThemeProvider } from "styled-components";
 import { Grommet } from "grommet";
-import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { Provider as StoreProvider } from "react-redux";
 
 import store from "./store";
 import Lists from "./pages/lists";
-import Authentication from "./pages/authentication";
+import Login from "./pages/login";
 import ListDetail from "./pages/list-detail";
 import { AuthProvider } from "./context/auth";
 import darkTheme from "./themes/black-theme";
@@ -15,37 +15,61 @@ import ClaimedItems from "./pages/claimed-items";
 import GuestProfileProvider from "./context/guest-profile";
 import Account from "./pages/account";
 import AuthenticatedRoute from "./components/authenticated-route";
+import StandardLayout from "./layouts/standard";
+import Upgrade from "./pages/upgrade";
+import ThemeModeProvider, { ThemeModeContext } from "./context/theme-mode";
+import Landing from "./pages/landing-copy";
+import Register from "./pages/register";
+import EnterName from "./pages/enter-name";
+import UserSanityGuard from "./components/user-sanity-guard";
 
-const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+const UsageRoutes = () => (
+  <StandardLayout>
+    <Switch>
+      <Route noAnonymous exact path="/lysts" component={Lists} />
+      <Route path="/lysts/:id" component={ListDetail} />
+      <AuthenticatedRoute path="/claimed" component={ClaimedItems} />
+      <AuthenticatedRoute path="/my-account" component={Account} />
+      <AuthenticatedRoute path="/upgrade-account" component={Upgrade} />
+    </Switch>
+  </StandardLayout>
+);
+const AppRoutes = () => (
+  <ThemeModeContext.Consumer>
+    {({ useDarkMode }) => (
+      <Grommet full theme={useDarkMode ? darkTheme : hpTheme} themeMode={useDarkMode ? "dark" : "light"}>
+        <UserSanityGuard>
+          <Switch>
+            <Route path="/register" component={Register} />
+            <Route path="/login" component={Login} />
+            <AuthenticatedRoute path="/complete-account" component={EnterName} />
+            <Route component={UsageRoutes} />
+          </Switch>
+        </UserSanityGuard>
+      </Grommet>
+    )}
+  </ThemeModeContext.Consumer>
+);
 
-function App() {
+const App = () => {
   return (
-    <ThemeProvider theme={hpTheme}>
-      <Grommet
-        theme={darkMode ? darkTheme : hpTheme}
-        themeMode={darkMode ? "dark" : "light"}
-        {...(!darkMode ? { background: "light-1" } : {})}
-        full
-      >
+    <ThemeModeProvider>
+      <ThemeProvider theme={hpTheme}>
         <StoreProvider store={store}>
           <BrowserRouter>
             <AuthProvider>
               <GuestProfileProvider>
                 <Switch>
-                  <Route path="/" exact render={() => <Redirect to="/lysts" />} />
-                  <AuthenticatedRoute noAnonymous path="/lysts" exact component={Lists} />
-                  <Route path="/login" component={Authentication} />
-                  <Route path="/lysts/:id" component={ListDetail} />
-                  <AuthenticatedRoute path="/claimed" component={ClaimedItems} />
-                  <AuthenticatedRoute path="/my-account" component={Account} />
+                  <Route path="/" exact component={Landing} />
+                  <Route component={AppRoutes} />
                 </Switch>
               </GuestProfileProvider>
             </AuthProvider>
           </BrowserRouter>
         </StoreProvider>
-      </Grommet>
-    </ThemeProvider>
+      </ThemeProvider>
+    </ThemeModeProvider>
   );
-}
+};
 
 export default App;

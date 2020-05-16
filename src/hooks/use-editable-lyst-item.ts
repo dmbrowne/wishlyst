@@ -1,5 +1,5 @@
-import React, { FC, useState, useRef, useEffect } from "react";
-import { firestore, functions, storage } from "firebase/app";
+import React, { useState, useRef } from "react";
+import { functions, storage, firestore } from "firebase/app";
 import { debounce } from "throttle-debounce";
 import * as yup from "yup";
 
@@ -7,62 +7,65 @@ import { ILystItem } from "./../store/types";
 import asyncCatch from "../utils/async-catch";
 
 interface Props {
-  lystItem: ILystItem;
   uploadImgPath: string;
-  onUpdateLyst: (field: { [fieldName: string]: any }) => any;
+  onUpdateLyst: (field: Partial<ILystItem>) => any;
 }
 
-const useEditableLystItem = ({ lystItem, onUpdateLyst, uploadImgPath }: Props) => {
+interface IUrlData {
+  title: string;
+  description: string;
+  image: string;
+  mimeType: string;
+  pageTitle: string;
+  screenshot: string;
+}
+
+const useEditableLystItem = ({ onUpdateLyst, uploadImgPath }: Props) => {
   const { current: getOpenGraphDetails } = useRef(functions().httpsCallable("getImagesFromUrl"));
   const { current: generateThumbnails } = useRef(functions().httpsCallable("generateThumbnails"));
-  const [urlGraphData, setUrlGraphData] = useState<Partial<{ title: string; description: string; image: string }>>({});
   const [noGraphData, setNoGraphData] = useState(false);
   const [imgUploadPending, setImgUploadPending] = useState(false);
   const [urlGraphFetchPending, setUrlGraphFetchPending] = useState(false);
-  const { current: handleUrlChange } = useRef(
-    debounce(1000, (url?: string) => {
-      if (!url) return;
-      if (lystItem.thumb && lystItem.name && lystItem.description) return;
-      // prettier-ignore
-      yup.string().url().validate(url).then(value => getGraphDataFromUrl(value));
-    })
-  );
+  const handleUrlChange = (url?: string) => {
+    onUpdateLyst({ suggestedNames: null, suggestedImages: null, suggestedDescription: null });
+    // prettier-ignore
+    yup.string().url().required().validate(url)
+        .then(value => getGraphDataFromUrl(value))
+        .catch(() => {});
+  };
+
   const getGraphDataFromUrl = async (url: string) => {
+    setNoGraphData(false);
     setUrlGraphFetchPending(true);
     const [err, result] = await asyncCatch(getOpenGraphDetails({ url }));
     setUrlGraphFetchPending(false);
-    if (err) {
-      setNoGraphData(true);
-      return;
-    }
-    const { data } = result as {
-      data: Partial<{ title: string; description: string; image: string; mimeType: string }>;
-    };
-    const { title, description, image, mimeType } = data;
-    if (!title && !description && !image) setNoGraphData(true);
+    if (err) return setNoGraphData(true);
+
+    const { data } = result as { data: Partial<IUrlData> };
+    if (Object.values(data).every(value => !value)) setNoGraphData(true);
     else setNoGraphData(false);
-    setUrlGraphData(mimeType ? { title, description, image } : { title, description });
 
-    if (title && !lystItem.name) onUpdateLyst({ name: title });
-    if (description && !lystItem.description) onUpdateLyst({ description });
-    const imageMimeTypes = ["image/png", "image/jpeg"];
+    const { title, description, image, pageTitle, screenshot: base64Ss } = data;
+    const screenshot = base64Ss ? firestore.Blob.fromUint8Array(Uint8Array.from(atob(base64Ss), c => c.charCodeAt(0))) : undefined;
+    const suggestedNames = [...(title ? [title] : []), ...(pageTitle ? [pageTitle] : [])];
+    const suggestedImages = [...(image ? [image] : []), ...(screenshot ? [screenshot as any] : [])];
+    onUpdateLyst({ suggestedNames, suggestedImages, suggestedDescription: description });
+  };
 
-    if (image && mimeType && imageMimeTypes.includes(mimeType)) {
-      getImageFormUrl(image, dataUrl => {
-        // prettier-ignore
-        const uploadTask = storage().ref(uploadImgPath).putString(dataUrl, 'data_url', { contentType: mimeType });
-        uploadTask.on(
-          "state_changed",
-          onUploadStateChange,
-          error => setImgUploadPending(false),
-          () => {
-            generateThumbnails({ storageRef: uploadImgPath.indexOf("/") === 0 ? uploadImgPath.substring(1) : uploadImgPath }).then(() =>
-              onUploadSuccess(uploadTask.snapshot)
-            );
-          }
-        );
+  const uploadImage = (dataUrl: string, mimeType: string = "image/jpeg", format = "data_url") => {
+    setImgUploadPending(true);
+    //prettier-ignore
+    const uploadTask = storage().ref(uploadImgPath).putString(dataUrl, format, { contentType: mimeType });
+
+    return new Promise<any>(resolve => {
+      //prettier-ignore
+      uploadTask.on("state_changed", onUploadStateChange, () => setImgUploadPending(false), () => {
+        generateThumbnails({ storageRef: uploadImgPath.indexOf("/") === 0 ? uploadImgPath.substring(1) : uploadImgPath }).then(() =>{
+          onUploadSuccess(uploadTask.snapshot)
+          resolve();
+        })
       });
-    }
+    });
   };
 
   const onUploadStateChange = ({ state }: storage.UploadTaskSnapshot) => {
@@ -76,36 +79,22 @@ const useEditableLystItem = ({ lystItem, onUpdateLyst, uploadImgPath }: Props) =
     onUpdateLyst({ thumb: snapshot.ref.fullPath });
   };
 
-  const getImageFormUrl = (url: string, callback: (base64: string) => any) => {
-    const img = new Image();
-    img.setAttribute("crossOrigin", "anonymous");
-    img.onload = function() {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-      }
-      callback(canvas.toDataURL("image/jpg"));
-    };
-    img.src = url;
-  };
-
   const handleChange = <E extends React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>>(cb?: (val: string) => any) => async (e: E) => {
     const value = e.target.value;
-    onUpdateLyst({ [e.target.name]: value });
+    onUpdateLyst({ [e.target.name]: value || "" });
     if (cb) cb(value);
   };
 
   return {
     handleChange,
+    resetGraphData: () => setNoGraphData(false),
     noGraphData,
     imgUploadPending,
     urlGraphFetchPending,
     handleUrlChange,
     onUploadStateChange,
     onUploadSuccess,
+    uploadImage,
   };
 };
 

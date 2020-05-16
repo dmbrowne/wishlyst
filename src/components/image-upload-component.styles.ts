@@ -10,13 +10,14 @@ const overlayHoverStyles = css`
 
     * {
       color: #fff;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
     }
   }
 `;
 
 export const SOverlayActions = styled(Box as React.FC<BoxProps & JSX.IntrinsicElements["div"] & { autoHide?: boolean }>).attrs(() => ({
   align: "center",
-  justify: "center"
+  justify: "center",
 }))`
   position: absolute;
   left: 0;

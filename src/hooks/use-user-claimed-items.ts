@@ -10,7 +10,7 @@ import { useStateSelector } from "../store";
 const useUserClaimedItems = (lystId: string, categories?: string[]) => {
   const dispatch = useDispatch();
   const { current: db } = useRef(firestore());
-  const { account } = useContext(AuthContext);
+  const account = useStateSelector(({ auth }) => auth.account);
   const allLystItems = useStateSelector(state => state.lystItems.allItems);
   const [claimedLystItemsIds, setClaimedLystItemIds] = useState<string[]>([]);
   const [nextQuery, setNextQuery] = useState<null | firestore.Query<firestore.DocumentData>>(null);
@@ -138,7 +138,6 @@ const useUserClaimedItems = (lystId: string, categories?: string[]) => {
     }
   };
 
-  console.log(claimedLystItemsIds);
   return {
     start,
     loadMore,

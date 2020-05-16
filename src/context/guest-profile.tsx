@@ -3,9 +3,8 @@ import { auth } from "firebase/app";
 import { IUser } from "../store/types";
 import { throttle } from "throttle-debounce";
 
-export interface IGuestProfile extends Omit<IUser, "email"> {
-  previousIds?: string[]; //list of previous anonymousIds that can used to link lystItems when converting account
-}
+export interface IGuestProfile extends Omit<IUser, "email" | "displayName" | "_private"> {}
+
 type TGuestUpdater = (localUser: IGuestProfile) => IGuestProfile;
 
 export const GuestProfileContext = createContext<{
@@ -41,19 +40,9 @@ const GuestProfileProvider: FC = ({ children }) => {
     const userFromStorage = window.localStorage.getItem(localStorageUserKey);
 
     if (!userFromStorage || userFromStorage === "null") {
-      return setGuestProfile({ id: account.uid, displayName: account.displayName || account.uid, lysts: {}, claimedItems: {} });
+      return setGuestProfile({ id: account.uid, lysts: {}, claimedItems: {} });
     }
     const hydratedUser = JSON.parse(userFromStorage) as IGuestProfile;
-
-    if (hydratedUser.id !== account.uid) {
-      const previousIds = hydratedUser.previousIds
-        ? hydratedUser.previousIds.includes(hydratedUser.id)
-          ? hydratedUser.previousIds
-          : [...hydratedUser.previousIds, hydratedUser.id]
-        : [hydratedUser.id];
-      hydratedUser.previousIds = previousIds;
-      hydratedUser.id = account.uid;
-    }
 
     setGuestProfile(hydratedUser);
   };

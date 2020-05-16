@@ -7,10 +7,12 @@ import { AuthContext } from "../context/auth";
 import { ILyst, IUser } from "../store/types";
 import { GuestProfileContext, IGuestProfile } from "../context/guest-profile";
 import { ClaimedLystItemsPreviewList } from "../components/claimed-lyst-items-preview-list";
+import { Helmet } from "react-helmet";
+import { useStateSelector } from "../store";
 
 const ClaimedItems = () => {
-  const { account, user } = useContext(AuthContext);
   const { guestProfile } = useContext(GuestProfileContext);
+  const { account, user } = useStateSelector(({ auth }) => auth);
   const { current: db } = useRef(firestore());
   const [lystOrder, setLystOrder] = useState<string[]>([]);
   const [lysts, setLysts] = useState<{ [id: string]: ILyst }>({});
@@ -27,7 +29,6 @@ const ClaimedItems = () => {
 
   const getLystItemsForUser = (usr: IUser | IGuestProfile) => {
     const lystIds = Object.keys(usr.lysts || {});
-    console.log(lystIds);
     const lystPromises = lystIds.map(id => {
       return db
         .doc(`lysts/${id}`)
@@ -42,7 +43,10 @@ const ClaimedItems = () => {
   };
 
   return (
-    <StandardLayout>
+    <>
+      <Helmet>
+        <title>Claimed items and bookmarked lists - Wishlyst</title>
+      </Helmet>
       <Heading level={1}>My claimed items</Heading>
       {!account ? (
         <Text size="large">Either login or register for an account to start claiming and saving items on your friends wishlysts</Text>
@@ -63,7 +67,7 @@ const ClaimedItems = () => {
           })}
         </>
       )}
-    </StandardLayout>
+    </>
   );
 };
 

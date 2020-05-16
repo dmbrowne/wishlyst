@@ -8,7 +8,7 @@ interface IProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
 }
 
 export const SHiddenFileInput = styled.input.attrs(() => ({
-  type: "file"
+  type: "file",
 }))`
   clip: rect(1px, 1px, 1px, 1px);
   clip-path: inset(50%);

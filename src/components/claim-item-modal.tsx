@@ -1,11 +1,13 @@
 import React, { FC, useContext } from "react";
-import Modal from "./modal";
 import { Text, Box, Heading } from "grommet";
+import qs from "query-string";
+import { useLocation } from "react-router-dom";
+import Modal from "./modal";
 import { AuthContext } from "../context/auth";
 import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-content";
 import AuthenticatedClaimModalContent from "./authenticated-claim-modal-content";
 import { ILystItem } from "../store/types";
-import { auth } from "firebase";
+import { useStateSelector } from "../store";
 
 interface IProps {
   onClose: () => void;
@@ -14,18 +16,13 @@ interface IProps {
 }
 
 export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem, onClaim }) => {
-  const { account } = useContext(AuthContext);
-
-  const onAnnoymousLogin = (displayName: string) => {
-    auth()
-      .signInAnonymously()
-      .then(({ user }) => {
-        if (user) user.updateProfile({ displayName });
-      });
-  };
+  const account = useStateSelector(({ auth }) => auth.account);
+  const location = useLocation();
+  const currentQueryString = qs.parse(location.search);
+  const queryString = qs.stringify({ ...currentQueryString, redirect: location.pathname, claim: lystItem.id });
 
   return (
-    <Modal title="Claim Item" onClose={onClose} width="700px">
+    <Modal title="Claim Item" onClose={onClose}>
       <Text as="div">Claim {lystItem.name}?</Text>
       <Text as="div" color="dark-6">
         By claiming this no one else would be able to buy/claim this item
@@ -34,15 +31,9 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem, onClaim }) => {
       <Box margin={{ top: "medium" }}>
         {!account ? (
           <UnauthenticatedClaimModalContent
-            onAnnoymousLogin={onAnnoymousLogin}
-            guestContent={
-              <>
-                <Heading level={4} margin={{ top: "none" }} children="Claim without account" />
-                <Text margin={{ bottom: "small" }}>
-                  Without logging in you can't make changes, and you have enter your details each time
-                </Text>
-              </>
-            }
+            redirectQueryString={queryString}
+            onAnonymousSignInSuccess={lystItem.quantity === 1 ? onClose : undefined}
+            guestContent={<Heading level={4} margin={{ top: "none" }} children="Claim without account" />}
           />
         ) : (
           <AuthenticatedClaimModalContent

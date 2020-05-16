@@ -11,6 +11,7 @@ import { GuestProfileContext } from "../context/guest-profile";
 import { FabButton } from "../styled-components/fab-button";
 import { Next } from "grommet-icons";
 import useGuestClaimedItems from "../hooks/use-guest-claimed-items";
+import { useStateSelector } from "../store";
 
 interface IProps {
   lystId: string;
@@ -19,7 +20,7 @@ interface IProps {
 
 export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) => {
   const { current: db } = useRef(firestore());
-  const { user } = useContext(AuthContext);
+  const user = useStateSelector(({ auth }) => auth.user);
   const { getLystItemsByLyst } = useGuestClaimedItems();
   const { guestProfile } = useContext(GuestProfileContext);
   const [lystItems, setLystItems] = useState<ILystItem[]>([]);

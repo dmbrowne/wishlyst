@@ -19,6 +19,7 @@ export interface ILyst {
   description?: string;
   requests?: string[];
   public: boolean;
+  shortUrl?: string;
   createdAt: firestore.Timestamp;
   _private: {
     owner: string;
@@ -28,13 +29,29 @@ export interface ILyst {
 export interface ILystItem {
   id: string;
   name: string;
+  suggestedNames?: string[] | null;
   url?: string;
   description?: string;
+  suggestedDescription?: string | null;
   thumb?: string;
+  suggestedImages?: (string | firestore.Blob)[] | null;
   claimants?: string[];
+  buyers?: {
+    [userId: string]: {
+      displayName: string;
+      useDefaultName: boolean;
+      count: number;
+      isAnonymous: boolean;
+      userId: string;
+    };
+  };
   quantity: number;
   categoryId?: string;
   createdAt: firestore.Timestamp;
+}
+
+export interface IStoreLystItem extends ILystItem {
+  lystId: string;
 }
 
 export interface IClaimedItem {
@@ -47,6 +64,8 @@ export interface IClaimedItem {
 export interface IUser {
   id: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   displayName: string;
   thumb?: string;
   bookmarked?: string[];
@@ -55,5 +74,8 @@ export interface IUser {
   };
   claimedItems?: {
     [lystItemId: string]: IClaimedItem;
+  };
+  _private: {
+    role: "standard" | "admin";
   };
 }
