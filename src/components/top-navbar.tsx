@@ -105,7 +105,10 @@ const TopNavbar = withRouter(({ history }) => {
               (isMobile ? (
                 <Button onClick={() => history.push("/login")} icon={<UserManager color="light-1" />} />
               ) : (
-                <Button onClick={() => history.push("/login")} children={<Text>Login / Register</Text>} />
+                <Box direction="row" gap="medium">
+                  <Button onClick={() => history.push("/login")} children={<Text>Login</Text>} />
+                  <Button onClick={() => history.push("/register")} children={<Text>Register</Text>} />
+                </Box>
               ))}
           </>
         )}

@@ -105,9 +105,9 @@ export const ugradeAnnoymousUser = functions.https.onCall(async (data, context) 
   await batch.commit();
 });
 
-type CreateUserProfileData = { uid: string; firstName: string; lastName: string };
+type CreateUserProfileData = { uid: string; firstName: string; lastName: string; displayName: string };
 export const createUserProfile = functions.https.onCall(async (data: CreateUserProfileData, context) => {
-  const { uid, firstName, lastName } = data;
+  const { uid, firstName, lastName, displayName } = data;
   if (!uid) throw new functions.https.HttpsError("unauthenticated", "token not found in request");
   const account = await admin.auth().getUser(uid);
   if (!account) throw new functions.https.HttpsError("not-found", "user account not found");
@@ -115,7 +115,7 @@ export const createUserProfile = functions.https.onCall(async (data: CreateUserP
 
   if (firstName) newUser.firstName = firstName;
   if (lastName) newUser.lastName = lastName;
-  if (!newUser.displayName) newUser.displayName = `${firstName} ${lastName.charAt(0)}`;
+  if (!newUser.displayName) newUser.displayName = displayName;
 
   const db = admin.firestore();
   const batch = db.batch();

@@ -12,10 +12,10 @@ import { Helmet } from "react-helmet";
 import hoverSocialButton from "./hover-social-button";
 import { SAuthContainer } from "../styled-components/auth-container";
 import { STextError } from "../styled-components/text-error";
+import { useStateSelector } from "../store";
 
 const SLogoContainer = styled(Box).attrs(props => ({
   margin: { horizontal: "large", bottom: "large" },
-  alignSelf: "center",
 }))`
   width: 150px;
   color: ${props => props.theme.global?.colors?.brand || "#000"};
@@ -28,11 +28,13 @@ const SLogoContainer = styled(Box).attrs(props => ({
 const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
   const isMobile = useContext(ResponsiveContext) === "small";
   const createUserProfile = functions().httpsCallable("createUserProfile");
+  const userAccount = useStateSelector(({ auth }) => auth.account);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showSpinner, setShowSpinner] = useState<"local" | "social" | false>(false);
   const [localAuthError, setLocalAuthError] = useState("");
   const [socialAuthError, setSocialAuthError] = useState("");
+  const [loginSuccess, setloginSuccess] = useState(false);
 
   const FacebookSignIn = hoverSocialButton("facebook", socialSignIn);
   const TwitterSignIn = hoverSocialButton("twitter", socialSignIn);
@@ -50,6 +52,7 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
     setShowSpinner(false);
     if (err) return setLocalAuthError(err.message);
     if (!account || !account.user) return setLocalAuthError("could't authenticate. account or account user not found");
+    setloginSuccess(true);
   };
 
   async function socialSignIn(provider: auth.TwitterAuthProvider | auth.GoogleAuthProvider | auth.FacebookAuthProvider) {
@@ -62,10 +65,16 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
         if (account.additionalUserInfo?.isNewUser) return createUserProfile({ uid: account.user.uid });
         return Promise.resolve(undefined as any);
       })
-      .then(() => history.push(loginSuccessUrl))
+      .then(() => setloginSuccess(true))
       .catch((err: firebase.auth.Error) => setSocialAuthError(err.message))
       .finally(() => setShowSpinner(false));
   }
+
+  useEffect(() => {
+    if (!!userAccount && loginSuccess) {
+      history.push(loginSuccessUrl);
+    }
+  }, [userAccount, loginSuccess]);
 
   return (
     <>
@@ -74,7 +83,11 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
       </Helmet>
       <Box fill justify={isMobile ? "start" : "center"} pad={isMobile ? "none" : "large"} style={isMobile ? mobileStyles : desktopStyles}>
         <SAuthContainer>
-          <SLogoContainer children={<Logo />} />
+          <Box alignSelf="center">
+            <Link to="/">
+              <SLogoContainer children={<Logo />} />
+            </Link>
+          </Box>
           <FormField label="Email">
             <TextInput type="email" value={email} onChange={e => setEmail(e.target.value)} />
           </FormField>

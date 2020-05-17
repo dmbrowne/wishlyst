@@ -4,7 +4,7 @@ import TopNavbar from "../components/top-navbar";
 
 const StandardLayout: FC = ({ children }) => {
   return (
-    <Box height={{ min: "100%" }}>
+    <Box height={{ min: "100%" }} style={{ display: "block" }}>
       <TopNavbar />
       <Box pad="medium" children={children} />
     </Box>

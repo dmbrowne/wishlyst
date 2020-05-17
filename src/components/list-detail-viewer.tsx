@@ -7,7 +7,7 @@ import LystHeader from "./lyst-header";
 import ClaimItemModal from "./claim-item-modal";
 import useLystItemActions from "../hooks/use-lyst-item-actions";
 import { ILystItem, ILyst } from "../store/types";
-import { useStateSelector } from "../store";
+import { useStateSelector, getAmountClaimed } from "../store";
 import { useDispatch, useStore } from "react-redux";
 import { useLocation, useHistory, useRouteMatch } from "react-router-dom";
 import Modal from "./modal";
@@ -41,7 +41,8 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems }) => {
     if (queryMap.claim && account) {
       const lystItem = lystItems.find(item => item.id === queryMap.claim);
       if (!lystItem) return;
-      if (lystItem.claimants?.length === lystItem.quantity) return;
+      const amountClaimed = getAmountClaimed(lystItem.buyers);
+      if (amountClaimed === lystItem.quantity) return;
       setClaimModalItem(lystItem);
     }
   }, [account]);
@@ -79,7 +80,7 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems }) => {
     const lystItem = store.getState().lystItems.allItems[itemId];
     if (!lystItem) return;
 
-    if (lystItem.claimants?.includes(account.uid)) {
+    if (Object.keys(lystItem.buyers || {}).includes(account.uid)) {
       removeClaim(account.uid, account.isAnonymous, lystItem.id);
     }
   };

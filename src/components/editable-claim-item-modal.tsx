@@ -1,11 +1,11 @@
 import React, { FC, useState, ChangeEvent, useContext } from "react";
 import Modal, { IProps as ModalProps } from "./modal";
-import { TextInput, Text, Box, Heading, RadioButton, FormField, TextInputProps, Button } from "grommet";
+import { TextInput, Text, Box, Heading, RadioButton, FormField, TextInputProps, Button, ThemeContext, ResponsiveContext } from "grommet";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
 import ClaimInfoList from "./claim-info-list";
-import { useStateSelector } from "../store";
+import { useStateSelector, getAmountClaimed } from "../store";
 import { useTheme } from "styled-components";
 import { AuthContext } from "../context/auth";
 import { slugify } from "../utils/slugify";
@@ -26,15 +26,18 @@ const MeOption: FC<MeOptionType> = ({ isSelected, onSelect }) => (
 );
 
 type UserSearchType = { isSelected: boolean; onSelect: () => any };
-const UserSearch: FC<UserSearchType> = ({ isSelected, onSelect }) => (
-  <Box direction="row" gap="medium" align="start">
-    <RadioButton name="user-search" checked={isSelected} onChange={onSelect} />
-    <Box flex="grow" style={{ opacity: isSelected ? 1 : 0.7 }}>
-      <Text margin={{ bottom: "small" }}>Search for thier name if they're on Wishlyst</Text>
-      <TextInput disabled={!isSelected} />
+const UserSearch: FC<UserSearchType> = ({ isSelected, onSelect }) => {
+  const isMobile = useContext(ResponsiveContext) === "small";
+  return (
+    <Box direction="row" gap="medium" align="start">
+      <RadioButton name="user-search" checked={isSelected} onChange={onSelect} />
+      <Box {...(!isMobile ? { flex: "grow" } : {})} style={{ opacity: isSelected ? 1 : 0.7 }}>
+        <Text margin={{ bottom: "small" }}>Search for thier name if they're on Wishlyst</Text>
+        <TextInput disabled={!isSelected} />
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 interface IAnonymousForm extends Omit<TextInputProps, "value"> {
   value: string;
@@ -44,10 +47,11 @@ interface IAnonymousForm extends Omit<TextInputProps, "value"> {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 const AnonymousForm: FC<IAnonymousForm> = ({ isSelected, onSelect, error, ...props }) => {
+  const isMobile = useContext(ResponsiveContext) === "small";
   return (
     <Box direction="row" gap="medium" align="start">
       <RadioButton name="user-search" value="anonymous" checked={isSelected} onChange={onSelect} />
-      <Box flex="grow" style={{ opacity: isSelected ? 1 : 0.7 }}>
+      <Box {...(!isMobile ? { flex: "grow" } : {})} style={{ opacity: isSelected ? 1 : 0.7 }}>
         <FormField label={"Manually enter thier name if they're not"} margin={{ bottom: "medium" }} error={error}>
           <TextInput name="displayName" {...props} disabled={!isSelected} />
         </FormField>
@@ -60,8 +64,9 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, onSelectClaimUser, onAnon
   const { dark } = useTheme();
   const account = useStateSelector(({ auth }) => auth.account);
   const lystItem = useStateSelector(state => state.lystItems.allItems[lystItemId]);
-  const hasClaimants = (lystItem.claimants || []).length > 0;
-  const completelyClaimed = (lystItem.claimants || []).length >= lystItem.quantity;
+  const amountClaimed = getAmountClaimed(lystItem.buyers);
+  const hasBuyers = amountClaimed > 0;
+  const completelyClaimed = amountClaimed >= lystItem.quantity;
 
   const [selectedBuyerOption, setSelectedBuyerOption] = useState<"me" | "user" | "anonymous">("me");
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -89,7 +94,8 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, onSelectClaimUser, onAnon
     if (selectedBuyerOption === "anonymous") {
       const displayName = anonymousForm.values.displayName;
       const userId = slugify(displayName);
-      return onAnonymousClaim({ userId, displayName }, 1);
+      onAnonymousClaim({ userId, displayName }, 1);
+      return anonymousForm.resetForm();
     } else {
       return false;
     }
@@ -106,29 +112,31 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, onSelectClaimUser, onAnon
         onDelete={(anon, id) => onRemoveClaim(id, anon)}
       />
 
-      {hasClaimants && !completelyClaimed && <Heading level={5}>Add more people:</Heading>}
+      {hasBuyers && !completelyClaimed && <Heading level={5}>Add more buyers:</Heading>}
       {!completelyClaimed && (
-        <Box pad="medium" background={dark ? "dark-1" : "light-1"} style={{ borderRadius: 12 }}>
-          <Box pad={{ right: "large" }}>
-            <Box margin={{ bottom: "large" }}>
-              <MeOption isSelected={selectedBuyerOption === "me"} onSelect={() => setSelectedBuyerOption("me")} />
+        <ThemeContext.Extend value={{ formField: { label: { margin: { top: "0", left: "0" } } } }}>
+          <Box pad="medium" background={dark ? "dark-1" : "light-1"} style={{ borderRadius: 12 }}>
+            <Box pad={{ right: "large" }}>
+              <Box margin={{ bottom: "large" }}>
+                <MeOption isSelected={selectedBuyerOption === "me"} onSelect={() => setSelectedBuyerOption("me")} />
+              </Box>
+              <Box margin={{ bottom: "large" }}>
+                <UserSearch isSelected={selectedBuyerOption === "user"} onSelect={() => setSelectedBuyerOption("user")} />
+              </Box>
+              <Box margin={{ bottom: "medium" }}>
+                <AnonymousForm
+                  name="displayName"
+                  value={anonymousForm.values.displayName}
+                  error={anonymousForm.errors.displayName}
+                  isSelected={selectedBuyerOption === "anonymous"}
+                  onSelect={() => setSelectedBuyerOption("anonymous")}
+                  onChange={anonymousForm.handleChange}
+                />
+              </Box>
             </Box>
-            <Box margin={{ bottom: "large" }}>
-              <UserSearch isSelected={selectedBuyerOption === "user"} onSelect={() => setSelectedBuyerOption("user")} />
-            </Box>
-            <Box margin={{ bottom: "medium" }}>
-              <AnonymousForm
-                name="displayName"
-                value={anonymousForm.values.displayName}
-                error={anonymousForm.errors.displayName}
-                isSelected={selectedBuyerOption === "anonymous"}
-                onSelect={() => setSelectedBuyerOption("anonymous")}
-                onChange={anonymousForm.handleChange}
-              />
-            </Box>
+            <Button primary label="Add buyer" alignSelf="end" disabled={!addFormIsValid()} onClick={onAddSubmit} />
           </Box>
-          <Button primary label="Add buyer" alignSelf="end" disabled={!addFormIsValid()} onClick={onAddSubmit} />
-        </Box>
+        </ThemeContext.Extend>
       )}
     </Modal>
   );

@@ -1,8 +1,8 @@
-import React, { FC, useState } from "react";
+import React, { FC, useState, useContext } from "react";
 import Modal from "./modal";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import FirebaseImage from "./firebase-image";
-import { Box, Tabs, Tab } from "grommet";
+import { Box, Tabs, Tab, ResponsiveContext } from "grommet";
 import FileInput from "./file-input";
 import ImageUpload from "./image-upload-container";
 
@@ -15,6 +15,7 @@ interface Props {
 
 const ChangeLystImageModal: FC<Props> = ({ onClose, activeRef, onSubmit, customUploadRef }) => {
   const [selected, setSelected] = useState("");
+  const isMobile = useContext(ResponsiveContext) === "small";
 
   const stockImageRefs = [
     "defaults/lyst_images/stock-gifts.svg",
@@ -40,7 +41,7 @@ const ChangeLystImageModal: FC<Props> = ({ onClose, activeRef, onSubmit, customU
               return (
                 <Box
                   onClick={() => setSelected(imageRef)}
-                  style={{ width: "25%", height: 150, borderRadius: 12, overflow: "hidden" }}
+                  style={{ width: isMobile ? "33%" : "25%", height: isMobile ? 100 : 150, borderRadius: 12, overflow: "hidden" }}
                   border={isActive ? { size: "5px", color: "brand" } : isSelected ? { color: "brand" } : true}
                 >
                   <FirebaseImage imageRef={imageRef} children={url => <SObjectFitImage src={url} />} />

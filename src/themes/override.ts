@@ -40,5 +40,4 @@ export default {
       },
     },
   },
-  formField: { label: { margin: { top: "0", left: "0" } } },
 };

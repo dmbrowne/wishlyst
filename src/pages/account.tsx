@@ -108,7 +108,7 @@ const Account: FC<RouteComponentProps> = ({ history }) => {
         <Heading level={2} children="My account" textAlign="center" />
         {user && !account.isAnonymous && (
           <Box direction="row" align="center" gap="medium" margin={{ vertical: "medium" }}>
-            <Box width="256px" height="256px" round="full" justify="center" overflow="hidden" border={{ style: "dotted" }}>
+            <Box width="150px" height="150px" round="full" justify="center" overflow="hidden" border={{ style: "dotted" }}>
               {!uploadPending ? (
                 <ImageUpload
                   name="user-avatar"

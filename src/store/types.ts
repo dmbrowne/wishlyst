@@ -26,24 +26,27 @@ export interface ILyst {
   };
 }
 
+export interface IBuyer {
+  displayName: string;
+  useDefaultName: boolean;
+  count: number;
+  isAnonymous: boolean;
+  userId: string;
+  thumb?: string;
+}
+
 export interface ILystItem {
   id: string;
   name: string;
   suggestedNames?: string[] | null;
   url?: string;
   description?: string;
+  color?: string;
   suggestedDescription?: string | null;
   thumb?: string;
   suggestedImages?: (string | firestore.Blob)[] | null;
-  claimants?: string[];
   buyers?: {
-    [userId: string]: {
-      displayName: string;
-      useDefaultName: boolean;
-      count: number;
-      isAnonymous: boolean;
-      userId: string;
-    };
+    [userId: string]: IBuyer;
   };
   quantity: number;
   categoryId?: string;

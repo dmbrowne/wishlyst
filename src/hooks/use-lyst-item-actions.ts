@@ -1,3 +1,5 @@
+import { IBuyer, IUser } from "./../store/types";
+import { getAmountClaimed } from "./../store/index";
 import { GuestProfileContext } from "../context/guest-profile";
 import { useContext, useRef } from "react";
 import { ILystItem } from "../store/types";
@@ -27,7 +29,7 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
         claimedItems[lystItem.id] = {
           lystId,
           lystItemRef: lystItem.path,
-          quantity: (claimedItems[lystItem.id].quantity || 0) + increment || 0,
+          quantity: ((claimedItems[lystItem.id] && claimedItems[lystItem.id].quantity) || 0) + increment || 0,
           claimedAt: firestore.Timestamp.now(),
         };
       }
@@ -39,22 +41,52 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
   const checkLystItemCanBeIncremented = (lystItemDoc: firestore.DocumentSnapshot, increment: number) => {
     const data = lystItemDoc.data() as Omit<ILystItem, "id">;
     if (!lystItemDoc.exists) throw Error("lystItem does not exist!");
-    if ((data.claimants?.length || 0) >= data.quantity && increment > 0) {
-      throw Error("Race condition: Someone else has just claimed this item");
+    const claimedCount = getAmountClaimed(data.buyers);
+    if (claimedCount >= data.quantity && increment > 0) {
+      throw Error("This item has reached it max claim amount");
     }
   };
 
-  const updateClaimantsList = (lystItem: Omit<ILystItem, "id"> & { id?: string }, userId: string, increment: number | null) => {
-    const currentClaimants = lystItem.claimants || [];
-    let orderedClaimaints = currentClaimants.sort();
-    const existingClaimedByUser = orderedClaimaints.filter(id => id === userId).length;
-    const newClaimQuantity = increment === null ? 0 : existingClaimedByUser + increment;
-    orderedClaimaints.splice(orderedClaimaints.indexOf(userId), existingClaimedByUser);
-    orderedClaimaints = [...orderedClaimaints, ...new Array(newClaimQuantity > 0 ? newClaimQuantity : 0).fill(userId)];
-    return orderedClaimaints;
+  const updateClaimantsList = (
+    lystItem: Omit<ILystItem, "id"> & { id?: string },
+    user: { userId: string; displayName: string; isAnonymous: boolean },
+    increment: number | null
+  ) => {
+    const { userId, displayName, isAnonymous } = user;
+    const currentBuyers = lystItem.buyers || {};
+    const currentBuyByUser = currentBuyers[userId] ? currentBuyers[userId] : null;
+
+    if (increment === null) return removeBuysByUser();
+
+    if (currentBuyByUser) {
+      const newCount = currentBuyByUser.count + increment;
+      if (newCount < 1) return removeBuysByUser();
+      currentBuyByUser.count = currentBuyByUser.count + increment;
+      currentBuyByUser.displayName = displayName;
+      return { ...currentBuyers, [userId]: currentBuyByUser };
+    } else {
+      const buyDetails: IBuyer = {
+        count: !increment ? 0 : increment,
+        displayName,
+        userId,
+        useDefaultName: true,
+        isAnonymous,
+      };
+
+      return { ...currentBuyers, [userId]: buyDetails };
+    }
+
+    function removeBuysByUser() {
+      return Object.entries(currentBuyers).reduce((accum, [id, buyer]) => {
+        if (id !== userId) return { ...accum, [id]: buyer };
+        else return accum;
+      }, {} as { [userId: string]: IBuyer });
+    }
   };
 
-  const claimForUser = (itemId: string, increment: number | null, claimantId: string) => (transaction?: firestore.Transaction) => {
+  const claimForUser = (itemId: string, increment: number | null, claimantId: string, displayName?: string) => (
+    transaction?: firestore.Transaction
+  ) => {
     const userRef = db.doc(`users/${claimantId}`);
     const userClaimedItemsRef = userRef.collection("claimedItems").doc(itemId);
     const lystItemRef = lystItemsRef.doc(itemId);
@@ -67,12 +99,18 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
       const { FieldValue } = firestore;
 
       return Promise.all(transactionFetches).then(([lystItemDoc, userDoc, userLystItemDoc]) => {
+        const user = userDoc.data() as Omit<IUser, "id">;
         const lystItemdata = lystItemDoc.data() as Omit<ILystItem, "id">;
-        if (increment) checkLystItemCanBeIncremented(lystItemDoc, increment);
-        const updatedClaimants = updateClaimantsList(lystItemdata, claimantId, increment);
-        const shouldDelete = updatedClaimants.includes(claimantId);
 
-        transActn.update(lystItemDoc.ref, { claimants: updatedClaimants });
+        if (increment) {
+          checkLystItemCanBeIncremented(lystItemDoc, increment);
+        }
+
+        const buyer = { userId: claimantId, displayName: displayName || user.displayName, isAnonymous: false };
+        const updatedBuyers = updateClaimantsList(lystItemdata, buyer, increment);
+        const shouldDelete = !updatedBuyers[claimantId];
+
+        transActn.update(lystItemDoc.ref, { buyers: updatedBuyers });
         transActn.update(userDoc.ref, {
           [`lysts.${lystId}`]: shouldDelete || increment === null ? FieldValue.delete() : FieldValue.increment(increment),
         });
@@ -101,16 +139,24 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
       const transactionFetches = [lystItemRef, annonUserRef].map(ref => transActn.get(ref));
 
       return Promise.all(transactionFetches).then(([lystItemDoc, annonUser]) => {
+        const currentDisplayName = annonUser.exists ? (annonUser.data() as IUser).displayName : undefined;
+        const updatedDisplayName = displayName || currentDisplayName;
+
+        if (!updatedDisplayName) {
+          throw Error("A displayName must be provided if anonymous user does not exist");
+        }
+
         const lystItemdata = lystItemDoc.data() as Omit<ILystItem, "id">;
         if (increment) checkLystItemCanBeIncremented(lystItemDoc, increment);
-        const updatedClaimants = updateClaimantsList(lystItemdata, claimantId, increment);
+        const buyer = { userId: claimantId, displayName: updatedDisplayName, isAnonymous: true };
+        const updatedBuyers = updateClaimantsList(lystItemdata, buyer, increment);
 
         if (!annonUser.exists) {
           if (!displayName) throw Error("anonymous user does not exist, a displayName must be provided to create an anonymous user");
           transActn.set(annonUserRef, { displayName });
         }
 
-        transActn.update(lystItemRef, { claimants: updatedClaimants });
+        transActn.update(lystItemRef, { buyers: updatedBuyers });
         updateGuestClaimedAndLystInfo(increment, { path: lystItemRef.path, id: itemId });
       });
     }

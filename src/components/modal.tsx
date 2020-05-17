@@ -17,16 +17,25 @@ export interface IProps extends BoxTypes {
 const Modal: FC<IProps> = ({ onClose, title, primaryActions, secondaryActions, children, layerProps, ...props }) => {
   const isMobile = useContext(ResponsiveContext) === "small";
   const hasActions = !!primaryActions || !!secondaryActions;
+
+  const mobileStyle: React.CSSProperties = {
+    position: "fixed",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  };
+
   return (
-    <Layer {...layerProps} style={{ maxWidth: 1000, ...(!isMobile ? { width: "80%" } : {}) }}>
-      <Box width="100%" pad="medium" {...props} style={{ display: "block", ...props.style }}>
-        <Box direction="row" justify="between" align="center" margin={{ bottom: "medium" }}>
+    <Layer {...layerProps} responsive={false} modal={false} style={{ maxWidth: 1000, ...(isMobile ? mobileStyle : { width: "80%" }) }}>
+      <Box width="100%" pad="medium" {...props} height="100%">
+        <Box flex={{ shrink: 0 }} direction="row" justify="between" align="center" margin={{ bottom: "medium" }}>
           {title && <Heading margin="none" level={3} children={title} />}
           <Button icon={<Close />} onClick={onClose} />
         </Box>
-        {children}
+        <div style={{ overflow: "auto", flex: 1, paddingTop: 3, paddingBottom: 3 }}>{children}</div>
         {hasActions && (
-          <Box direction="row" gap="small" justify="between" margin={{ top: "large", bottom: "small" }}>
+          <Box flex={{ shrink: 0 }} direction="row" gap="small" justify="between" margin={{ top: "large", bottom: "small" }}>
             <Box direction="row" gap="small">
               {!!secondaryActions && secondaryActions.map(prps => <Button key={prps.label} {...prps} />)}
             </Box>

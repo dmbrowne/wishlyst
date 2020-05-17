@@ -1,6 +1,6 @@
 import React, { FC, useContext } from "react";
 import { Text, Box, Button, ResponsiveContext } from "grommet";
-import { StatusGood, Filter } from "grommet-icons";
+import { StatusGood, Filter, Add } from "grommet-icons";
 import ClaimInfo from "./claim-info";
 import GridListing from "../styled-components/grid-listing";
 import LystItemCard from "./lyst-item-card";
@@ -24,29 +24,35 @@ const LystItemCardGridLayout: FC<IProps> = ({ onFilter, lystItems, onAddItem, on
   const showAddButton = isOwner && onAddItem && (claimFilter === "unclaimed" || !claimFilter);
   return (
     <Box>
-      <Box height="40px" margin={{ bottom: "medium" }} justify="between" direction="row">
-        <Box>{onFilter && <Button alignSelf="start" label="filter" icon={<Filter />} onClick={onFilter} />}</Box>
-        <Box>{showAddButton && <Button label="Add another item" onClick={onAddItem} />}</Box>
+      <Box margin={{ bottom: "medium" }} justify="between" direction="row">
+        <Box round="full" border overflow="hidden">
+          {onFilter && <Button onClick={onFilter} icon={<Filter />} />}
+        </Box>
+        <Box round="full" border overflow="hidden">
+          {showAddButton && <Button hoverIndicator icon={<Add />} onClick={onAddItem} />}
+        </Box>
       </Box>
       <GridListing>
-        {lystItems.map(lystItem =>
-          isOwner ? (
-            <LystItemOwnerCard
-              lystItem={lystItem}
-              onClaim={() => onClaim(lystItem.id)}
-              onViewpeople={() => onClaim(lystItem.id)}
-              onView={() => onView(lystItem.id)}
-            />
-          ) : (
-            <LystItemClaimCard
-              key={lystItem.id}
-              lystItem={lystItem}
-              onClaim={() => onClaim(lystItem.id)}
-              onView={() => onView(lystItem.id)}
-              onRemoveClaim={onRemoveClaim ? () => onRemoveClaim(lystItem.id) : undefined}
-            />
-          )
-        )}
+        {lystItems.map(lystItem => (
+          <React.Fragment key={lystItem.id}>
+            {isOwner ? (
+              <LystItemOwnerCard
+                lystItem={lystItem}
+                onClaim={() => onClaim(lystItem.id)}
+                onViewBuyers={() => onClaim(lystItem.id)}
+                onView={() => onView(lystItem.id)}
+              />
+            ) : (
+              <LystItemClaimCard
+                key={lystItem.id}
+                lystItem={lystItem}
+                onClaim={() => onClaim(lystItem.id)}
+                onView={() => onView(lystItem.id)}
+                onRemoveClaim={onRemoveClaim ? () => onRemoveClaim(lystItem.id) : undefined}
+              />
+            )}
+          </React.Fragment>
+        ))}
       </GridListing>
       <Box height="40px" margin={{ vertical: "large" }}>
         {showAddButton && <Button label="Add another item" alignSelf="center" onClick={onAddItem} />}

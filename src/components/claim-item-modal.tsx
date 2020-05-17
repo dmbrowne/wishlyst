@@ -3,11 +3,10 @@ import { Text, Box, Heading } from "grommet";
 import qs from "query-string";
 import { useLocation } from "react-router-dom";
 import Modal from "./modal";
-import { AuthContext } from "../context/auth";
 import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-content";
 import AuthenticatedClaimModalContent from "./authenticated-claim-modal-content";
 import { ILystItem } from "../store/types";
-import { useStateSelector } from "../store";
+import { useStateSelector, getAmountClaimed } from "../store";
 
 interface IProps {
   onClose: () => void;
@@ -20,6 +19,7 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem, onClaim }) => {
   const location = useLocation();
   const currentQueryString = qs.parse(location.search);
   const queryString = qs.stringify({ ...currentQueryString, redirect: location.pathname, claim: lystItem.id });
+  const amountClaimed = getAmountClaimed(lystItem.buyers);
 
   return (
     <Modal title="Claim Item" onClose={onClose}>
@@ -40,7 +40,7 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem, onClaim }) => {
             multi={lystItem.quantity > 1}
             onClaim={onClaim}
             totalQuantity={lystItem.quantity}
-            maxQuantity={lystItem.quantity - ((lystItem.claimants && lystItem.claimants.length) || 0)}
+            maxQuantity={lystItem.quantity - amountClaimed}
           />
         )}
       </Box>

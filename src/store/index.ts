@@ -1,3 +1,4 @@
+import { IStoreLystItem } from "./types";
 import { createStore } from "redux";
 
 import reducers, { IRootReducer } from "./combined-reducers";
@@ -11,5 +12,10 @@ export function useStateSelector<TSelected = unknown>(
 ) {
   return useSelector(selector, equalityFn);
 }
+
+export const getAmountClaimed = (buyers: IStoreLystItem["buyers"]) => {
+  const amountClaimed = Object.values(buyers || {}).reduce((total, { count }) => total + count, 0);
+  return amountClaimed;
+};
 
 export default store;

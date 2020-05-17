@@ -6,6 +6,7 @@ import FirebaseImage from "./firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import getImgThumb, { EThumbSize } from "../utils/get-image-thumb";
 import styled, { css, useTheme } from "styled-components";
+import { getAmountClaimed } from "../store";
 
 interface IProps extends BoxTypes {
   lystItem: ILystItem;
@@ -72,7 +73,7 @@ const LystItemCard: FC<IProps> = ({ lystItem, muted, footer, children, onView, .
   const isMobile = useContext(ResponsiveContext) === "small";
   const claimedBgColor = dark ? "#3c5d51" : "status-ok-bg";
   const partialClaimedBgColor = dark ? "#403e33" : "status-warning-bg";
-  const claimCount = lystItem.claimants?.length || 0;
+  const claimCount = getAmountClaimed(lystItem.buyers);
   const isFullyClaimed = claimCount === lystItem.quantity;
   const isPartiallyClaimed = claimCount >= 1 && claimCount < lystItem.quantity;
   const cardBg = isFullyClaimed ? claimedBgColor : isPartiallyClaimed ? partialClaimedBgColor : undefined;

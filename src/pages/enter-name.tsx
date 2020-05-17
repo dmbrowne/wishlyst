@@ -1,11 +1,10 @@
-import React, { useState, useContext, FC } from "react";
+import React, { useState, FC, useEffect } from "react";
 import { Box, Heading, TextInput, FormField, Button } from "grommet";
 import qs from "query-string";
 
 import { ReactComponent as Logo } from "../assets/icons/wishlystlogo.svg";
 import { SAuthContainer } from "../styled-components/auth-container";
 import { RouteComponentProps } from "react-router-dom";
-import { AuthContext } from "../context/auth";
 import { functions } from "firebase/app";
 import Spinner from "../components/spinner";
 import { STextError } from "../styled-components/text-error";
@@ -14,9 +13,10 @@ import { useStateSelector } from "../store";
 const EnterName: FC<RouteComponentProps> = ({ location, history }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [createProfileError, setCreateProfileError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { account } = useStateSelector(({ auth }) => auth);
+  const { account, user } = useStateSelector(({ auth }) => auth);
   const createUserProfile = functions().httpsCallable("createUserProfile");
   const redirectUrl = qs.parse(location.search).redirect;
   const loginSuccessUrl = Array.isArray(redirectUrl) ? redirectUrl[0] : redirectUrl || "/lysts";
@@ -24,11 +24,27 @@ const EnterName: FC<RouteComponentProps> = ({ location, history }) => {
   const onSubmit = () => {
     if (!firstName || !lastName || !account) return;
     setIsSubmitting(true);
-    createUserProfile({ uid: account.uid, firstName, lastName })
+    createUserProfile({ uid: account.uid, firstName, lastName, displayName })
       .then(() => history.push(loginSuccessUrl))
       .catch(e => setCreateProfileError(e.message))
       .finally(() => setIsSubmitting(false));
   };
+
+  useEffect(() => {
+    if (user) {
+      if (user.firstName) setFirstName(user.firstName);
+      if (user.lastName) setLastName(user.lastName);
+      setDisplayName(user.displayName || `${firstName} ${lastName.charAt(0)}`);
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <Box fill justify="center" align="center">
+        <Spinner color="brand" />
+      </Box>
+    );
+  }
 
   return (
     <Box>

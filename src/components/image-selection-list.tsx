@@ -19,11 +19,7 @@ export interface IImageSelectionList extends ImageUploadProps {
   onSelectImage?: (dataUrl: string) => Promise<any>;
 }
 
-const ButtonContainer: FC = ({ children }) => (
-  <Box margin={{ top: "xsmall" }} height="35px">
-    {children}
-  </Box>
-);
+const ButtonContainer: FC<BoxTypes> = props => <Box margin={{ top: "xsmall" }} height="35px" {...props} />;
 
 const ImageSelectionList: FC<IImageSelectionList> = ({
   uploadPending,
@@ -78,7 +74,12 @@ const ImageSelectionList: FC<IImageSelectionList> = ({
         <Box width="300px" height="195px" justify="center">
           {uploadPending ? <Spinner color="brand" /> : <ImageUpload label={props.previewImageRef ? "" : "Upload an image"} {...props} />}
         </Box>
-        {onSelectImage && <ButtonContainer />}
+        {onSelectImage && (
+          <ButtonContainer direction="row" justify="between">
+            <Button primary color="light-1" size="small" label="Upload" />
+            <Button size="small" color="status-critical" label="Remove" />
+          </ButtonContainer>
+        )}
       </div>
       {!hideClipboard && hasClipboardPermission && (
         <div style={{ width: 250 }}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FC, useRef, useContext } from "react";
 import GridListing from "../styled-components/grid-listing";
-import { Box, Text, FormField, TextInput, Heading, Button, ThemeContext } from "grommet";
+import { Box, Text, FormField, TextInput, Heading, Button, ThemeContext, ResponsiveContext } from "grommet";
 import { firestore, auth } from "firebase/app";
 import { Add, StatusWarning } from "grommet-icons";
 import Modal from "../components/modal";
@@ -14,9 +14,13 @@ import { lystAdded, setMyLystsOrder } from "../store/lysts";
 import { ILyst } from "../store/types";
 import { useTheme } from "styled-components";
 import { Helmet } from "react-helmet";
+import { ReactComponent as ListIcon } from "../assets/icons/list.svg";
+import FirebaseImage from "../components/firebase-image";
+import SObjectFitImage from "../styled-components/object-fit-image";
 
 const Lists: FC<RouteComponentProps> = ({ history }) => {
   const dispatch = useDispatch();
+  const isMobile = useContext(ResponsiveContext) === "small";
   const { current: db } = useRef(firestore());
   const { account, initialFetched } = useStateSelector(({ auth }) => auth);
   const lysts = useStateSelector(myLystsSelector);
@@ -112,11 +116,26 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
         <GridListing>
           {lysts &&
             lysts.map(lyst => (
-              <SRoundedCard key={lyst.id} height="200px" onClick={() => history.push(`/lysts/${lyst.id}`)}>
-                <Heading level="4">{lyst.name}</Heading>
+              <SRoundedCard
+                key={lyst.id}
+                height={{ min: isMobile ? "150px" : "250px" }}
+                pad="none"
+                onClick={() => history.push(`/lysts/${lyst.id}`)}
+                overflow="hidden"
+              >
+                <Box height={isMobile ? "80px" : "150px"}>
+                  {lyst.thumb ? (
+                    <FirebaseImage imageRef={lyst.thumb}>{imgSrc => <SObjectFitImage src={imgSrc} />}</FirebaseImage>
+                  ) : (
+                    <Box pad="12px" background="dark-2" children={<ListIcon />} />
+                  )}
+                </Box>
+                <Box pad="medium">
+                  <Heading level="4" margin={{ top: "none" }} children={lyst.name} />
+                </Box>
               </SRoundedCard>
             ))}
-          <Box align="center" justify="center">
+          <Box align="center" justify="center" height={isMobile ? "150px" : "250px"}>
             <FabButton label="Add new lyst" icon={<Add size="large" />} onClick={() => setNewLystModal(true)} />
           </Box>
         </GridListing>

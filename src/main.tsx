@@ -1,6 +1,6 @@
 import React from "react";
 import { ThemeProvider } from "styled-components";
-import { Grommet } from "grommet";
+import { Grommet, Box } from "grommet";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { Provider as StoreProvider } from "react-redux";
 
@@ -37,14 +37,16 @@ const UsageRoutes = () => (
 const AppRoutes = () => (
   <ThemeModeContext.Consumer>
     {({ useDarkMode }) => (
-      <Grommet full theme={useDarkMode ? darkTheme : hpTheme} themeMode={useDarkMode ? "dark" : "light"}>
+      <Grommet theme={useDarkMode ? darkTheme : hpTheme} themeMode={useDarkMode ? "dark" : "light"}>
         <UserSanityGuard>
-          <Switch>
-            <Route path="/register" component={Register} />
-            <Route path="/login" component={Login} />
-            <AuthenticatedRoute path="/complete-account" component={EnterName} />
-            <Route component={UsageRoutes} />
-          </Switch>
+          <Box height={{ min: "100vh" }}>
+            <Switch>
+              <Route path="/register" component={Register} />
+              <Route path="/login" component={Login} />
+              <AuthenticatedRoute path="/complete-account" component={EnterName} />
+              <Route component={UsageRoutes} />
+            </Switch>
+          </Box>
         </UserSanityGuard>
       </Grommet>
     )}

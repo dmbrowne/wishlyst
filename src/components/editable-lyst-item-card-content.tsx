@@ -19,7 +19,10 @@ interface Props extends Omit<IImageSelectionList, "name" | "fetchingUrlImage" | 
   uploadImgPath: string;
   onDeleteImageSuccess?: (snap: storage.UploadTaskSnapshot) => any;
   uploadImage: (dataUrl: string) => Promise<any>;
-  values: Pick<ILystItem, "url" | "name" | "suggestedNames" | "quantity" | "categoryId" | "thumb" | "suggestedImages" | "description">;
+  values: Pick<
+    ILystItem,
+    "url" | "name" | "suggestedNames" | "quantity" | "categoryId" | "thumb" | "suggestedImages" | "description" | "color"
+  >;
 }
 
 const EditableLystItemCardContent: FC<Props> = ({
@@ -34,6 +37,8 @@ const EditableLystItemCardContent: FC<Props> = ({
 }) => {
   const isMobile = useContext(ResponsiveContext) === "small";
   const { categories, categoryMap, createCategory } = useContext(CategoriesContext);
+  const textRowCount = (values.description || "").split("\n").length;
+  const rows = textRowCount + 1;
 
   return (
     <>
@@ -77,10 +82,10 @@ const EditableLystItemCardContent: FC<Props> = ({
             <ThemeContext.Extend value={{ textInput: { container: { extend: "flex: 1" } } }}>
               <TextInput
                 size="small"
-                name="description"
+                name="color"
                 onChange={onChange}
                 placeholder="Specify a colour if needed"
-                value={values.description || ""}
+                value={values.color || ""}
               />
             </ThemeContext.Extend>
             <ThemeContext.Extend value={{ textInput: { container: { extend: "flex: 1" } } }}>
@@ -99,7 +104,7 @@ const EditableLystItemCardContent: FC<Props> = ({
           </Box>
         </Box>
       </Box>
-      <Heading as="header" level={4} children="Choose an image" margin={{ vertical: "small" }} />
+      <Heading as="header" level={4} children="Choose an image" margin={{ top: "large", bottom: "small" }} />
       <ImageSelectionList
         name="lystItemThumb"
         uploadRefPath={props.uploadImgPath}
@@ -112,15 +117,17 @@ const EditableLystItemCardContent: FC<Props> = ({
         imgList={values.suggestedImages}
         onSelectImage={props.onSelectImage}
       />
-      {/* <FormField label="Optional text / description" margin={{ vertical: "medium" }}>
+      <FormField label="Optional text / description" margin={{ vertical: "medium" }}>
         <TextArea
+          style={{ height: "unset" }}
+          rows={rows}
           name="description"
           size="small"
           onChange={onChange}
           placeholder="Describe the colour you want, or what size, or what you plan to use it for etc."
           value={values.description || ""}
         />
-      </FormField> */}
+      </FormField>
     </>
   );
 };

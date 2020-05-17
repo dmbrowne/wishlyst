@@ -1,3 +1,4 @@
+import { getAmountClaimed } from "./../store/index";
 import { IRootReducer } from "./../store/combined-reducers";
 import { createSelector } from "reselect";
 import { ILyst, ILystItem } from "../store/types";
@@ -19,15 +20,15 @@ export const orderedLystItemsSelector = createSelector(
       return order.reduce((accum, id) => {
         const item = itemMap[id];
         const exists = !!item;
-        const claimantsCount = item.claimants?.length || 0;
-        const claimants = item.claimants || [];
+        const buyers = item.buyers || {};
+        const claimedCount = getAmountClaimed(buyers);
         let add = false;
 
         if (exists) {
           if (!claimFilter) add = true;
-          if (claimFilter === "claimed" && claimantsCount > 0) add = true;
-          if (claimFilter === "me" && !!accountId && claimants.includes(accountId)) add = true;
-          if (claimFilter === "unclaimed" && claimantsCount === 0) add = true;
+          if (claimFilter === "claimed" && claimedCount > 0) add = true;
+          if (claimFilter === "me" && !!accountId && Object.keys(buyers).includes(accountId)) add = true;
+          if (claimFilter === "unclaimed" && claimedCount === 0) add = true;
         }
 
         return [...accum, ...(add ? [item] : ([] as any))];

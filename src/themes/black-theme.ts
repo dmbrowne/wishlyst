@@ -134,14 +134,20 @@ const blackTheme = deepMerge(
           },
         },
         medium: {
-          value: 1536,
+          value: 1024,
         },
-        large: {},
+        large: {
+          value: 1440,
+        },
+        xlarge: {
+          value: 1900,
+        },
       },
       deviceBreakpoints: {
         phone: "small",
         tablet: "medium",
-        computer: "large",
+        desktop: "large",
+        largeDesktop: "xlarge",
       },
       control: {
         border: {
