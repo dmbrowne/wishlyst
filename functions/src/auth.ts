@@ -1,6 +1,9 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { request } from "https";
+import * as fs from "fs";
+import * as http from "http";
+import * as https from "https";
+import * as os from "os";
 
 type AccountType = "standard" | "admin";
 interface FirestoreUserData {
@@ -36,16 +39,26 @@ const getDetailsFromProvider = (providerData: admin.auth.UserInfo[]) => {
 const uploadPhotoToStorageFromUrl = async (url: string, userId: string) => {
   const storagePath = `users/avatar_${userId}`;
   const bucket = admin.storage().bucket();
-  const remoteWriteStream = bucket.file(storagePath).createWriteStream({
-    metadata: { contentType: "image/jpeg" },
-  });
+  const destination = os.tmpdir() + `/avatar_${userId}`;
 
   try {
+    const file = fs.createWriteStream(destination);
+    const get = url.startsWith("https") ? https.get : url.startsWith("http") ? http.get : null;
+    if (!get) {
+      console.error("url doesnt start with http or https");
+      return null;
+    }
     await new Promise((resolve, reject) => {
-      request(url)
-        .pipe(remoteWriteStream)
-        .on("error", e => reject("could not save image to bucket. Error: \n" + e.message))
-        .on("finish", resolve);
+      get(url, response => {
+        response.pipe(file);
+        file.on("finish", () => {
+          file.close();
+          bucket.upload(destination, { destination: storagePath }, (err, uploadedFile) => {
+            if (err) reject(err.message);
+            resolve();
+          });
+        });
+      }).on("error", err => reject(err.message));
     });
     return storagePath;
   } catch (error) {
@@ -106,23 +119,23 @@ export const ugradeAnnoymousUser = functions.https.onCall(async (data, context) 
 });
 
 type CreateUserProfileData = { uid: string; firstName: string; lastName: string; displayName: string };
-export const createUserProfile = functions.https.onCall(async (data: CreateUserProfileData, context) => {
+export const createUserProfile = functions.runWith({ memory: "512MB" }).https.onCall(async (data: CreateUserProfileData, context) => {
   const { uid, firstName, lastName, displayName } = data;
   if (!uid) throw new functions.https.HttpsError("unauthenticated", "token not found in request");
   const account = await admin.auth().getUser(uid);
   if (!account) throw new functions.https.HttpsError("not-found", "user account not found");
-  const newUser = await prepNewUser(account);
+  try {
+    const newUser = await prepNewUser(account);
 
-  if (firstName) newUser.firstName = firstName;
-  if (lastName) newUser.lastName = lastName;
-  if (!newUser.displayName) newUser.displayName = displayName;
+    if (firstName) newUser.firstName = firstName;
+    if (lastName) newUser.lastName = lastName;
+    if (!newUser.displayName) newUser.displayName = displayName;
 
-  const db = admin.firestore();
-  const batch = db.batch();
-  batch.set(db.doc(`users/${account.uid}`), newUser);
-  if (newUser.email) {
-    batch.set(db.doc(`userEmails/${newUser.email}`), { userId: account.uid });
+    const db = admin.firestore();
+    const { exists, ref } = await db.doc(`users/${account.uid}`).get();
+    await (exists ? ref.update(newUser) : ref.set(newUser));
+    return true;
+  } catch (e) {
+    throw new functions.https.HttpsError("internal", e.message);
   }
-  await batch.commit();
-  return true;
 });

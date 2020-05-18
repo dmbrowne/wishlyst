@@ -3,12 +3,14 @@ import { IUser } from "./types";
 export interface IReducerState {
   account: firebase.User | null;
   user: IUser | null;
+  userFetched: boolean;
   initialFetched: boolean;
 }
 
 const initialState: IReducerState = {
   account: null,
   user: null,
+  userFetched: false,
   initialFetched: false,
 };
 
@@ -29,7 +31,7 @@ export default function accountReducer(state = initialState, action: Action) {
     case "auth/FETCH_ACCOUNT_SUCCESS":
       return { ...state, account: action.payload, initialFetched: true };
     case "auth/FETCH_USER_PROFILE_SUCCESS":
-      return { ...state, user: action.payload };
+      return { ...state, user: action.payload, userFetched: true };
     default:
       return state;
   }

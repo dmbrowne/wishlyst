@@ -1,5 +1,5 @@
 import React, { useContext, FC, useState, useEffect, useRef } from "react";
-import { Heading, FormField, TextInput, Box, Text, Button } from "grommet";
+import { Heading, FormField, TextInput, Box, Button } from "grommet";
 import { RouteComponentProps } from "react-router-dom";
 import { firestore, auth, storage } from "firebase/app";
 import { throttle } from "throttle-debounce";
@@ -54,12 +54,11 @@ const DisplayMode = () => {
 
 const Account: FC<RouteComponentProps> = ({ history }) => {
   const { current: db } = useRef(firestore());
+  const { current: deboouncedNameUpdate } = useRef(throttle(1500, (val: string) => updateUser({ displayName: val })));
   const { forceUpdate } = useContext(AuthContext);
   const { account, user } = useStateSelector(({ auth }) => auth);
   const [name, setName] = useState(user ? user.displayName : account?.isAnonymous ? account.displayName || "" : "");
   const [uploadPending, setUploadPending] = useState(false);
-
-  const { current: deboouncedNameUpdate } = useRef(throttle(1500, (val: string) => updateUser({ displayName: val })));
 
   const updateUser = (values: Partial<Omit<IUser, "id">>) => {
     const { currentUser } = auth();

@@ -13,7 +13,6 @@ export const SAuthContainer = styled(Box as FC<BoxTypes>).attrs(props => ({
   border-radius: 16px;
 
   @media (max-width: 767px) {
-    margin-top: 24px;
     padding: 16px;
     border: none;
     ${props =>

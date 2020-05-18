@@ -34,7 +34,6 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
   const [showSpinner, setShowSpinner] = useState<"local" | "social" | false>(false);
   const [localAuthError, setLocalAuthError] = useState("");
   const [socialAuthError, setSocialAuthError] = useState("");
-  const [loginSuccess, setloginSuccess] = useState(false);
 
   const FacebookSignIn = hoverSocialButton("facebook", socialSignIn);
   const TwitterSignIn = hoverSocialButton("twitter", socialSignIn);
@@ -52,7 +51,6 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
     setShowSpinner(false);
     if (err) return setLocalAuthError(err.message);
     if (!account || !account.user) return setLocalAuthError("could't authenticate. account or account user not found");
-    setloginSuccess(true);
   };
 
   async function socialSignIn(provider: auth.TwitterAuthProvider | auth.GoogleAuthProvider | auth.FacebookAuthProvider) {
@@ -65,16 +63,15 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
         if (account.additionalUserInfo?.isNewUser) return createUserProfile({ uid: account.user.uid });
         return Promise.resolve(undefined as any);
       })
-      .then(() => setloginSuccess(true))
       .catch((err: firebase.auth.Error) => setSocialAuthError(err.message))
       .finally(() => setShowSpinner(false));
   }
 
   useEffect(() => {
-    if (!!userAccount && loginSuccess) {
+    if (!!userAccount) {
       history.push(loginSuccessUrl);
     }
-  }, [userAccount, loginSuccess]);
+  }, [userAccount]);
 
   return (
     <>
@@ -95,8 +92,8 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
             <TextInput type="password" value={password} onChange={e => setPassword(e.target.value)} />
           </FormField>
           <Box direction="row" align="center" justify="center" margin={{ top: "small", bottom: "large" }} gap="small">
-            <Button onClick={login} primary label="Login" alignSelf="center" disabled={!formIsValid || !!showSpinner} />
-            {showSpinner === "local" && <Spinner />}
+            <Button onClick={() => login()} primary label="Login" alignSelf="center" disabled={!formIsValid || !!showSpinner} />
+            {showSpinner === "local" && <Spinner color="brand" />}
           </Box>
           <Text size="small" alignSelf="center" textAlign="center" margin={{ top: "medium" }}>
             Or sign in using a social provider

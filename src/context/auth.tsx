@@ -7,8 +7,6 @@ import { useDispatch } from "react-redux";
 import { fetchAccountSuccess, fetchUserProfileSuccess } from "../store/account";
 import { useStateSelector } from "../store";
 
-type TUnsubscribe = () => void;
-
 interface IAuthContext {
   forceUpdate: () => void;
   convertAnonymousToEmailPassword: (values: { email: string; password: string }, guestProfile?: IGuestProfile) => Promise<any>;
@@ -38,7 +36,7 @@ const UserWatcher: FC<{ userId: string }> = ({ userId, children }) => {
 export const AuthProvider: FC = ({ children }) => {
   const dispatch = useDispatch();
   const { current: ugradeAnnoymousUser } = useRef(functions().httpsCallable("ugradeAnnoymousUser"));
-  const { account, user, initialFetched } = useStateSelector(({ auth }) => auth);
+  const { account } = useStateSelector(({ auth }) => auth);
   const [forcedUpdates, setForcedUpdates] = useState(0);
 
   useEffect(() => {

@@ -66,9 +66,9 @@ const LystDetailSidebar: FC<IProps> = ({ onClose, lystId, onSelectCategory, filt
   return (
     <ThemeContext.Extend value={themeValues}>
       <Layer position="right" full="vertical" responsive={false} style={{ width: "80%", maxWidth: 500, borderRadius: 0 }}>
-        <Box background={dark ? "dark-1" : "light-1"} direction="row" pad="small">
-          <Button plain onClick={onClose} icon={<FormClose />} />
-          <Box flex="grow">
+        <Box background={dark ? "dark-1" : "light-1"} direction="row">
+          <Button onClick={onClose} icon={<FormClose />} />
+          <Box flex="grow" pad="small">
             <Heading textAlign="center" margin="none" level={4} children="Display and filter" />
           </Box>
         </Box>

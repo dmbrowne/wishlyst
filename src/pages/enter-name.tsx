@@ -1,16 +1,18 @@
 import React, { useState, FC, useEffect } from "react";
 import { Box, Heading, TextInput, FormField, Button } from "grommet";
 import qs from "query-string";
+import { useTheme } from "styled-components";
+import { RouteComponentProps } from "react-router-dom";
+import { functions } from "firebase/app";
 
 import { ReactComponent as Logo } from "../assets/icons/wishlystlogo.svg";
 import { SAuthContainer } from "../styled-components/auth-container";
-import { RouteComponentProps } from "react-router-dom";
-import { functions } from "firebase/app";
 import Spinner from "../components/spinner";
 import { STextError } from "../styled-components/text-error";
 import { useStateSelector } from "../store";
 
 const EnterName: FC<RouteComponentProps> = ({ location, history }) => {
+  const { dark } = useTheme();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -34,7 +36,9 @@ const EnterName: FC<RouteComponentProps> = ({ location, history }) => {
     if (user) {
       if (user.firstName) setFirstName(user.firstName);
       if (user.lastName) setLastName(user.lastName);
-      setDisplayName(user.displayName || `${firstName} ${lastName.charAt(0)}`);
+      if (firstName && lastName) {
+        setDisplayName(user.displayName || `${firstName} ${lastName.charAt(0)}`);
+      }
     }
   }, [user]);
 
@@ -47,8 +51,8 @@ const EnterName: FC<RouteComponentProps> = ({ location, history }) => {
   }
 
   return (
-    <Box>
-      <Box height="60px" justify="center" pad={{ vertical: "small" }} margin={{ bottom: "large" }}>
+    <Box height={{ min: "100vh" }} background={dark ? undefined : "white"}>
+      <Box height="60px" justify="center" pad={{ vertical: "small" }} margin={{ vertical: "large" }}>
         <Logo />
       </Box>
       <SAuthContainer pad={{ horizontal: "medium", vertical: "large" }}>
@@ -64,6 +68,9 @@ const EnterName: FC<RouteComponentProps> = ({ location, history }) => {
             <TextInput value={lastName} onChange={e => setLastName(e.target.value)} />
           </FormField>
         </Box>
+        <FormField style={{ flex: 1 }} label="Display name" help="This will be shown on items you claim">
+          <TextInput value={displayName} onChange={e => setDisplayName(e.target.value)} />
+        </FormField>
 
         {createProfileError && <STextError children={createProfileError} />}
         <Button

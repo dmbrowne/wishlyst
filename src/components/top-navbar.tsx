@@ -6,7 +6,6 @@ import { auth } from "firebase/app";
 import { withRouter, useHistory } from "react-router-dom";
 import { List, Bookmark, Icon as IconType, UserManager } from "grommet-icons";
 import FirebaseImage from "./firebase-image";
-import { AuthContext } from "../context/auth";
 import { Avatar } from "./avatar";
 import { useStateSelector } from "../store";
 

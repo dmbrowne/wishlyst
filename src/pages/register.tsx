@@ -15,6 +15,7 @@ import RegisterAccountForm, { RegisterFormValues } from "../components/register-
 import { SAuthContainer } from "../styled-components/auth-container";
 import { STextError } from "../styled-components/text-error";
 import { useStateSelector } from "../store";
+import { BottomCorner } from "grommet-icons";
 
 const SLogoContainer = styled(Box).attrs(props => ({
   margin: { horizontal: "large", bottom: "large" },
@@ -28,13 +29,13 @@ const SLogoContainer = styled(Box).attrs(props => ({
 `;
 
 const Register: FC<RouteComponentProps> = ({ history, location }) => {
+  const { dark } = useTheme();
   const isMobile = useContext(ResponsiveContext) === "small";
   const createUserProfile = functions().httpsCallable("createUserProfile");
   const userAccount = useStateSelector(({ auth }) => auth.account);
   const [showSpinner, setShowSpinner] = useState<"local" | "social" | false>(false);
   const [localAuthError, setLocalAuthError] = useState("");
   const [socialAuthError, setSocialAuthError] = useState("");
-  const [loginSuccess, setloginSuccess] = useState(false);
 
   const { redirect = "/lysts", ...currentQueryMap } = qs.parse(location.search);
   const newQS = qs.stringify(currentQueryMap) || "";
@@ -58,7 +59,6 @@ const Register: FC<RouteComponentProps> = ({ history, location }) => {
     if (!account || !account.user) return setLocalAuthError("could't authenticate. account or account user not found");
 
     await createUserProfile({ uid: account?.user?.uid, firstName, lastName });
-    setloginSuccess(true);
   };
 
   function socialSignIn(provider: auth.TwitterAuthProvider | auth.GoogleAuthProvider | auth.FacebookAuthProvider) {
@@ -69,7 +69,6 @@ const Register: FC<RouteComponentProps> = ({ history, location }) => {
         if (!account || !account.user) throw Error("no account found");
         return createUserProfile({ uid: account.user.uid });
       })
-      .then(() => setloginSuccess(true))
       .catch(err => setSocialAuthError(err.message))
       .finally(() => setShowSpinner(false));
   }
@@ -78,15 +77,19 @@ const Register: FC<RouteComponentProps> = ({ history, location }) => {
   const desktopStyles = { minHeight: 560 };
 
   useEffect(() => {
-    if (!!userAccount && loginSuccess) {
-      history.push(authSuccessUri);
-    }
-  }, [userAccount, loginSuccess]);
+    if (!!userAccount) history.push(authSuccessUri);
+  }, [userAccount]);
 
   return (
     <>
       <Helmet children={<title>Sign up for an account - Wishlyst</title>} />
-      <Box fill justify={isMobile ? "start" : "center"} pad="large" style={isMobile ? mobileStyles : desktopStyles}>
+      <Box
+        height={{ min: "100vh" }}
+        justify={isMobile ? "start" : "center"}
+        pad={isMobile ? { bottom: "large" } : "large"}
+        style={isMobile ? mobileStyles : desktopStyles}
+        background={dark ? undefined : "white"}
+      >
         <SAuthContainer>
           <Box alignSelf="center">
             <Link to="/">

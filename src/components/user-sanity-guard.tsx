@@ -1,8 +1,7 @@
-import React, { useContext, FC } from "react";
+import React, { FC } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import qs from "query-string";
 
-import { AuthContext } from "../context/auth";
 import { useStateSelector } from "../store";
 
 const UserSanityGuard: FC = ({ children }) => {

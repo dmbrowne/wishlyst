@@ -24,30 +24,30 @@ import EnterName from "./pages/enter-name";
 import UserSanityGuard from "./components/user-sanity-guard";
 
 const UsageRoutes = () => (
-  <StandardLayout>
-    <Switch>
-      <Route noAnonymous exact path="/lysts" component={Lists} />
-      <Route path="/lysts/:id" component={ListDetail} />
-      <AuthenticatedRoute path="/claimed" component={ClaimedItems} />
-      <AuthenticatedRoute path="/my-account" component={Account} />
-      <AuthenticatedRoute path="/upgrade-account" component={Upgrade} />
-    </Switch>
-  </StandardLayout>
+  <UserSanityGuard>
+    <StandardLayout>
+      <Switch>
+        <Route noAnonymous exact path="/lysts" component={Lists} />
+        <Route path="/lysts/:id" component={ListDetail} />
+        <AuthenticatedRoute path="/claimed" component={ClaimedItems} />
+        <AuthenticatedRoute path="/my-account" component={Account} />
+        <AuthenticatedRoute path="/upgrade-account" component={Upgrade} />
+      </Switch>
+    </StandardLayout>
+  </UserSanityGuard>
 );
 const AppRoutes = () => (
   <ThemeModeContext.Consumer>
     {({ useDarkMode }) => (
       <Grommet theme={useDarkMode ? darkTheme : hpTheme} themeMode={useDarkMode ? "dark" : "light"}>
-        <UserSanityGuard>
-          <Box height={{ min: "100vh" }}>
-            <Switch>
-              <Route path="/register" component={Register} />
-              <Route path="/login" component={Login} />
-              <AuthenticatedRoute path="/complete-account" component={EnterName} />
-              <Route component={UsageRoutes} />
-            </Switch>
-          </Box>
-        </UserSanityGuard>
+        <Box height={{ min: "100vh" }}>
+          <Switch>
+            <Route path="/register" component={Register} />
+            <Route path="/login" component={Login} />
+            <AuthenticatedRoute path="/complete-account" component={EnterName} />
+            <Route component={UsageRoutes} />
+          </Switch>
+        </Box>
       </Grommet>
     )}
   </ThemeModeContext.Consumer>
