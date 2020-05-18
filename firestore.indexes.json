@@ -1,0 +1,93 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "lystItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "categoryId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lystItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "claimants",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "categoryId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lystItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "claimants",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "claimedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lystItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "claimants",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "claimedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lystItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "claimants",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lystItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "claimants",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
