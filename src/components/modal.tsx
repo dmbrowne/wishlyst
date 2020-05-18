@@ -24,10 +24,17 @@ const Modal: FC<IProps> = ({ onClose, title, primaryActions, secondaryActions, c
     right: 0,
     bottom: 0,
     left: 0,
+    transform: "translate(0,0) scale(1)",
+  };
+
+  const mobileLayerProps = {
+    animation: false,
+    responsive: false,
+    style: mobileStyle,
   };
 
   return (
-    <Layer {...layerProps} responsive={false} modal={false} style={{ maxWidth: 1000, ...(isMobile ? mobileStyle : { width: "80%" }) }}>
+    <Layer {...layerProps} {...(isMobile ? mobileLayerProps : { style: { maxWidth: 1000, width: "80%" } })}>
       <Box width="100%" pad="medium" {...props} height="100%">
         <Box flex={{ shrink: 0 }} direction="row" justify="between" align="center" margin={{ bottom: "medium" }}>
           {title && <Heading margin="none" level={3} children={title} />}
