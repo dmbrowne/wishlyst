@@ -31,12 +31,14 @@ export interface IBuyer {
   useDefaultName: boolean;
   count: number;
   isAnonymous: boolean;
+  confirmed: boolean;
   userId: string;
   thumb?: string;
 }
 
 export interface ILystItem {
   id: string;
+  lystId: string;
   name: string;
   suggestedNames?: string[] | null;
   url?: string;
@@ -51,10 +53,6 @@ export interface ILystItem {
   quantity: number;
   categoryId?: string;
   createdAt: firestore.Timestamp;
-}
-
-export interface IStoreLystItem extends ILystItem {
-  lystId: string;
 }
 
 export interface IClaimedItem {
@@ -72,10 +70,13 @@ export interface IUser {
   displayName: string;
   thumb?: string;
   bookmarked?: string[];
-  lysts?: {
+  lystItemsCount?: {
     [lystId: string]: number;
   };
   claimedItems?: {
+    [lystItemId: string]: IClaimedItem;
+  };
+  pendingClaims?: {
     [lystItemId: string]: IClaimedItem;
   };
   _private: {

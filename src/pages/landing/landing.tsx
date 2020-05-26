@@ -1,12 +1,12 @@
-import React, { FC, useEffect, HTMLAttributes, ImgHTMLAttributes, useContext } from "react";
+import React, { FC, useEffect, useContext } from "react";
 import { Box, Heading, Text, BoxTypes, ResponsiveContext, Button } from "grommet";
 import Rellax from "rellax";
 import styled from "styled-components";
 
-import LandingHero from "../components/landing-hero";
-import LandingFeatures from "../components/landing-features";
-import HowItWorks from "../components/landing-how-it-works";
-import SObjectFitImage from "../styled-components/object-fit-image";
+import LandingHero from "./landing-hero";
+import LandingFeatures from "./landing-features";
+import HowItWorks from "./landing-how-it-works";
+import SObjectFitImage from "../../styled-components/object-fit-image";
 
 const SignUpButton = styled(Button).attrs(() => ({
   alignSelf: "start",

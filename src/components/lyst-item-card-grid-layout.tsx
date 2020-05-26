@@ -1,9 +1,7 @@
-import React, { FC, useContext } from "react";
-import { Text, Box, Button, ResponsiveContext } from "grommet";
-import { StatusGood, Filter, Add } from "grommet-icons";
-import ClaimInfo from "./claim-info";
+import React, { FC } from "react";
+import { Box, Button } from "grommet";
+import { Filter, Add } from "grommet-icons";
 import GridListing from "../styled-components/grid-listing";
-import LystItemCard from "./lyst-item-card";
 import { ILystItem } from "../store/types";
 import { useStateSelector } from "../store";
 import LystItemOwnerCard from "./lyst-item-owner-card";
@@ -44,7 +42,6 @@ const LystItemCardGridLayout: FC<IProps> = ({ onFilter, lystItems, onAddItem, on
               />
             ) : (
               <LystItemClaimCard
-                key={lystItem.id}
                 lystItem={lystItem}
                 onClaim={() => onClaim(lystItem.id)}
                 onView={() => onView(lystItem.id)}

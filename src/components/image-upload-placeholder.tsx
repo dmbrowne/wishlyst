@@ -1,28 +1,21 @@
 import React, { InputHTMLAttributes, FC } from "react";
-import { Box, Button } from "grommet";
+import { Box } from "grommet";
 import { Trash } from "grommet-icons";
 import FirebaseImage from "./firebase-image";
-import FileInput from "./file-input";
-import { SOverlayActions } from "./image-upload-component.styles";
+import FileInput, { IProps as IFileInputProps } from "./file-input";
+import { SOverlayActions } from "../styled-components/overlay-actions";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import UploadButton from "./upload-button";
+import CircleButton from "./circle-button";
 
-export interface IComponentProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface IComponentProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "name">, IFileInputProps {
   onInputFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDelete?: () => any;
-  label?: string;
   imageRef?: string;
-  name: string;
 }
 
-export const ImageUploadComponent: FC<IComponentProps> = ({ onInputFileChange, onDelete, label, imageRef, children, name, ...props }) => {
-  const deleteButton = (
-    <Button disabled={props.disabled} onClick={onDelete}>
-      <Box align="center">
-        <Box background="status-critical" pad="medium" style={{ borderRadius: "50%" }} children={<Trash />} />
-      </Box>
-    </Button>
-  );
+export const ImageUploadPlaceholder: FC<IComponentProps> = ({ onInputFileChange, onDelete, label, imageRef, name, ...props }) => {
+  const deleteButton = <CircleButton backgroundColorType="status-critical" icon={<Trash />} disabled={props.disabled} onClick={onDelete} />;
 
   const uploadBtn = <UploadButton backgroundColorType={imageRef ? "white" : "brand"} label={label} disabled={props.disabled} />;
 
@@ -30,10 +23,10 @@ export const ImageUploadComponent: FC<IComponentProps> = ({ onInputFileChange, o
     <Box style={{ position: "relative" }} border={{ style: "dashed" }} overflow="hidden" fill>
       {imageRef ? <FirebaseImage imageRef={imageRef} children={url => <SObjectFitImage alt="cover" src={url} />} /> : null}
       <SOverlayActions autoHide={!!imageRef}>
-        <Box direction="row" align="center" justify="center" gap="small">
+        <Box direction="row" align="start" justify="center" gap="small">
           <Box style={{ flex: 1 }}>
             <FileInput name={name} onChange={onInputFileChange} {...props}>
-              {children ? children : uploadBtn}
+              {uploadBtn}
             </FileInput>
           </Box>
           {!!imageRef && onDelete && <Box style={{ flex: 1 }}>{deleteButton}</Box>}
@@ -43,4 +36,4 @@ export const ImageUploadComponent: FC<IComponentProps> = ({ onInputFileChange, o
   );
 };
 
-export default ImageUploadComponent;
+export default ImageUploadPlaceholder;

@@ -4,7 +4,6 @@ import ClaimModalAuth from "./claim-modal-auth";
 import { useTheme } from "styled-components";
 import SocialLogin from "./social-login";
 import { auth } from "firebase/app";
-import { GuestProfileContext } from "../context/guest-profile";
 import { AuthContext } from "../context/auth";
 import { useHistory } from "react-router-dom";
 

@@ -21,6 +21,16 @@ export const deleteAllAnonymousUsers = functions.firestore.document("lysts/{lyst
   return true;
 });
 
+export const deleteAllCategories = functions.firestore.document("lysts/{lystId}").onDelete(async (snap, { params }) => {
+  const categoriesSnap = await admin
+    .firestore()
+    .collection(`lysts/${params.lystId}/categories`)
+    .get();
+  const deletions = categoriesSnap.docs.map(doc => doc.ref.delete());
+  await Promise.all(deletions);
+  return true;
+});
+
 export const removeCategoriesFromLystItem = functions.firestore
   .document("lysts/{lystId}/categories/{categoryId}")
   .onDelete(async (snap, { params }) => {

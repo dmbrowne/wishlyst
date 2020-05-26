@@ -18,13 +18,13 @@ export const orderedLystItemsSelector = createSelector(
   (accountId, order, claimFilter, itemMap) => {
     if (order) {
       return order.reduce((accum, id) => {
-        const item = itemMap[id];
-        const exists = !!item;
-        const buyers = item.buyers || {};
-        const claimedCount = getAmountClaimed(buyers);
+        const item = itemMap[id] as ILystItem | null;
         let add = false;
 
-        if (exists) {
+        if (!!item) {
+          const buyers = item.buyers || {};
+          const claimedCount = getAmountClaimed(buyers);
+
           if (!claimFilter) add = true;
           if (claimFilter === "claimed" && claimedCount > 0) add = true;
           if (claimFilter === "me" && !!accountId && Object.keys(buyers).includes(accountId)) add = true;

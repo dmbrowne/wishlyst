@@ -1,19 +1,19 @@
 import React, { useRef, useContext, useState, FC, useEffect } from "react";
-import { firestore, auth } from "firebase/app";
 import { useTheme } from "styled-components";
 import { RouteComponentProps } from "react-router-dom";
-import { Heading, Box, FormField, TextInput, Button, Text } from "grommet";
+import { Heading, Box, Button, Text } from "grommet";
 import * as yup from "yup";
-import { Formik, Field, FieldConfig, FieldProps, Form } from "formik";
+import { Formik, Field, FieldProps, Form } from "formik";
 import { Helmet } from "react-helmet";
 
 import { useStateSelector } from "../store";
 import { AuthContext } from "../context/auth";
 import Spinner from "../components/spinner";
-import { SocialLoginLayout, SocialPlatform, SocialProvider } from "../components/social-login";
+import { SocialLoginLayout, SocialProvider } from "../components/social-login";
 import Modal from "../components/modal";
 import BorderlessButton from "../components/borderless-button";
 import { GuestProfileContext } from "../context/guest-profile";
+import FieldInput from "../components/field-input";
 
 const emailPasswordValidationSchema = yup.object().shape({
   email: yup
@@ -87,24 +87,29 @@ const Upgrade: FC<RouteComponentProps> = ({ history }) => {
           {formikProps => (
             <Form>
               <Box pad="medium" margin={{ top: "medium" }}>
-                <FormField label="Name" help="To be displayed on claimed items (this can be changed later)">
-                  <TextInput value={account.displayName || ""} disabled={true} />
-                </FormField>
+                <FieldInput
+                  label="Name"
+                  help="To be displayed on claimed items (this can be changed later)"
+                  value={account.displayName || ""}
+                  disabled={true}
+                />
               </Box>
 
               <Box background={dark ? "dark-1" : "light-2"} pad="medium" margin={{ top: "medium" }}>
                 <Field name="email">
                   {({ field, meta }: FieldProps) => (
-                    <FormField label="Email" error={meta.touched && meta.error}>
-                      <TextInput {...field} disabled={accountLinkPending} />
-                    </FormField>
+                    <FieldInput type="email" label="Email" error={meta.touched && meta.error} {...field} disabled={accountLinkPending} />
                   )}
                 </Field>
                 <Field name="password">
                   {({ field, meta }: FieldProps) => (
-                    <FormField label="Password" error={meta.touched && meta.error}>
-                      <TextInput {...field} type="password" disabled={accountLinkPending} />
-                    </FormField>
+                    <FieldInput
+                      type="password"
+                      label="Password"
+                      error={meta.touched && meta.error}
+                      {...field}
+                      disabled={accountLinkPending}
+                    />
                   )}
                 </Field>
                 <Box direction="row" align="center" justify="center" gap="xsmall">

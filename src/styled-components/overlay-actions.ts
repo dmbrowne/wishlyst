@@ -2,11 +2,15 @@ import { Box, BoxProps } from "grommet";
 import { transparentize } from "polished";
 import styled, { css } from "styled-components";
 
-const overlayHoverStyles = css`
+const overlayHoverStyles = css<{ background?: string }>`
   &:hover {
     opacity: 1;
     background: ${props =>
-      typeof props.theme.global?.colors?.brand === "string" ? transparentize(0.5, props.theme.global?.colors?.brand) : "transparent"};
+      props.background
+        ? transparentize(0.5, props.background)
+        : typeof props.theme.global?.colors?.brand === "string"
+        ? transparentize(0.5, props.theme.global?.colors?.brand)
+        : "transparent"};
 
     * {
       color: #fff;

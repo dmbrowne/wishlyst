@@ -16,7 +16,7 @@ const UserSanityGuard: FC = ({ children }) => {
   if (account && !account.isAnonymous) {
     if (!user) return null;
     if (!user.firstName || !user.lastName) {
-      const currentQueryString = qs.parse(window.location.href);
+      const currentQueryString = qs.parse(location.search);
       const queryString = qs.stringify({ ...currentQueryString, redirect: location.pathname });
       history.push("/complete-account?" + queryString);
       return null;

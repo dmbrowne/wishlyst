@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useRef, useState, FC } from "react";
+import React, { useContext, useEffect, useState, FC } from "react";
 import { Heading, Box, BoxTypes } from "grommet";
-import { AuthContext } from "../context/auth";
-import { firestore } from "firebase/app";
+import { db } from "../firebase";
 import { ILystItem } from "../store/types";
 import SRoundedCard from "../styled-components/rounded-card";
 import FirebaseImage from "./firebase-image";
@@ -19,11 +18,11 @@ interface IProps {
 }
 
 export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) => {
-  const { current: db } = useRef(firestore());
   const user = useStateSelector(({ auth }) => auth.user);
   const { getLystItemsByLyst } = useGuestClaimedItems();
   const { guestProfile } = useContext(GuestProfileContext);
   const [lystItems, setLystItems] = useState<ILystItem[]>([]);
+
   useEffect(() => {
     if (user) {
       db.collection(`users/${user.id}/claimedItems`)
@@ -39,14 +38,14 @@ export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) =
         setLystItems(snaps.map(snap => ({ id: snap.id, ...(snap.data() as ILystItem) })));
       });
     }
-  }, []);
+  }, [getLystItemsByLyst, guestProfile, lystId, user]);
 
   return (
     <Box direction="row" gap="small" wrap={false} overflow="auto">
       {lystItems.map(lystItem => (
         <SRoundedCard key={lystItem.id} width="25%" margin={{ right: "medium" }} style={{ minWidth: 350 }}>
           <Box>
-            <Box height={{ max: "350px", min: "200px" }} style={{ height: "30vh" }}>
+            <Box height={{ max: "300px", min: "200px" }} style={{ height: "30vh" }}>
               {lystItem.thumb && (
                 <FirebaseImage imageRef={getImgThumb(lystItem.thumb, EThumbSize.large)}>
                   {imgUrl => <SObjectFitImage src={imgUrl} />}

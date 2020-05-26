@@ -10,7 +10,9 @@ addDecorator(withKnobs);
 addDecorator(storyFn => {
   return (
     <ThemeProvider theme={hpTheme}>
-      <Grommet theme={hpTheme}>{storyFn()}</Grommet>
+      <Grommet full theme={hpTheme}>
+        {storyFn()}
+      </Grommet>
     </ThemeProvider>
   );
 });

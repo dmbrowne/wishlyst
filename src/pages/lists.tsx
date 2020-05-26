@@ -1,33 +1,33 @@
-import React, { useState, useEffect, FC, useRef, useContext } from "react";
+import React, { useState, useEffect, FC, useContext } from "react";
 import GridListing from "../styled-components/grid-listing";
-import { Box, Text, FormField, TextInput, Heading, Button, ThemeContext, ResponsiveContext } from "grommet";
+import { Box, Text, Heading, Button, ThemeContext, ResponsiveContext } from "grommet";
 import { firestore, auth } from "firebase/app";
-import { Add, StatusWarning } from "grommet-icons";
-import Modal from "../components/modal";
 import { RouteComponentProps } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Helmet } from "react-helmet";
+import { Add, StatusWarning } from "grommet-icons";
+import { db } from "../firebase";
+
+import Modal from "../components/modal";
 import SRoundedCard from "../styled-components/rounded-card";
 import { FabButton } from "../styled-components/fab-button";
 import { useStateSelector } from "../store";
 import { myLystsSelector } from "../selectors";
-import { useDispatch } from "react-redux";
 import { lystAdded, setMyLystsOrder } from "../store/lysts";
 import { ILyst } from "../store/types";
-import { useTheme } from "styled-components";
-import { Helmet } from "react-helmet";
 import { ReactComponent as ListIcon } from "../assets/icons/list.svg";
 import FirebaseImage from "../components/firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";
+import FieldInput from "../components/field-input";
 
 const Lists: FC<RouteComponentProps> = ({ history }) => {
   const dispatch = useDispatch();
   const isMobile = useContext(ResponsiveContext) === "small";
-  const { current: db } = useRef(firestore());
   const { account, initialFetched } = useStateSelector(({ auth }) => auth);
   const lysts = useStateSelector(myLystsSelector);
   const [newLystModal, setNewLystModal] = useState(false);
   const [newLystName, setNewLystName] = useState("");
-  const [newLystError, setNewLystError] = useState("");
-  const { dark } = useTheme();
+  const [, setNewLystError] = useState("");
 
   useEffect(() => {
     if (!account) return;
@@ -40,7 +40,7 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
         });
         dispatch(setMyLystsOrder(snap.docs.map(({ id }) => id)));
       });
-  }, [account]);
+  }, [account, dispatch]);
 
   const onSubmitNewLyst = () => {
     const user = auth().currentUser;
@@ -51,14 +51,14 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
     const newLystRef = db.collection("lysts").doc();
     const newLyst: Omit<ILyst, "id"> = {
       name: newLystName,
-      public: true,
+      public: false,
       createdAt: firestore.Timestamp.now(),
       _private: {
         owner: user.uid,
       },
     };
     newLystRef.set(newLyst);
-    history.push(`/lysts/${newLystRef.id}`);
+    history.push(`/app/wishlysts/${newLystRef.id}`);
   };
 
   const updateNewLystName = (val: string) => {
@@ -120,7 +120,7 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
                 key={lyst.id}
                 height={{ min: isMobile ? "150px" : "250px" }}
                 pad="none"
-                onClick={() => history.push(`/lysts/${lyst.id}`)}
+                onClick={() => history.push(`/app/wishlysts/${lyst.id}`)}
                 overflow="hidden"
               >
                 <Box height={isMobile ? "80px" : "150px"}>
@@ -147,9 +147,7 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
           onClose={() => setNewLystModal(false)}
           primaryActions={[{ label: "Add", onClick: onSubmitNewLyst }]}
         >
-          <FormField label="wishlyst name">
-            <TextInput value={newLystName} onChange={e => updateNewLystName(e.target.value)} />
-          </FormField>
+          <FieldInput label="wishlyst name" value={newLystName} onChange={e => updateNewLystName(e.target.value)} />
         </Modal>
       )}
     </>

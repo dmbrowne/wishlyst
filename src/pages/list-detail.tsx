@@ -1,6 +1,7 @@
-import React, { FC, useEffect, useReducer, useRef, useContext, useState } from "react";
+import React, { FC, useEffect, useReducer, useState } from "react";
 import { RouteComponentProps } from "react-router-dom";
 import { firestore } from "firebase/app";
+import { db } from "../firebase";
 import { useDispatch } from "react-redux";
 
 import componentLystReducer, {
@@ -15,7 +16,6 @@ import ListDetailEditable from "../components/list-detail-editable";
 import { setActiveView, lystAdded } from "../store/lysts";
 import { useStateSelector } from "../store";
 import { ILyst, ICategory, ILystItem, EFetchStatus } from "../store/types";
-import { AuthContext } from "../context/auth";
 import { fetchUserSuccess, IStoreUser } from "../store/users";
 import CategoriesContextProvider from "../context/categories";
 import { Helmet } from "react-helmet";
@@ -26,10 +26,6 @@ import { orderedLystItemsSelector } from "../selectors";
 
 const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, history }) => {
   const lystId = match.params.id;
-  const { current: db } = useRef(firestore());
-  const { current: lystRef } = useRef(db.doc(`/lysts/${lystId}`));
-  const lystItemsRef = lystRef.collection(`lystItems`);
-
   const dispatch = useDispatch();
   const { account } = useStateSelector(({ auth }) => auth);
   const { activeView } = useStateSelector(state => state.lysts);
@@ -57,11 +53,11 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
     localDispatch(setFilteredCategories(cats));
   };
 
-  useEffect(() => lystRef.onSnapshot(snap => dispatch(lystAdded({ id: snap.id, ...(snap.data() as ILyst) }))), [lystRef]);
-
   useEffect(() => {
+    const lystRef = db.doc(`/lysts/${lystId}`);
+    const unsubcribeLyst = lystRef.onSnapshot(snap => dispatch(lystAdded({ id: snap.id, ...(snap.data() as ILyst) })));
     // prettier-ignore
-    return lystRef.collection(`categories`).orderBy("label", "asc").onSnapshot(snap => {
+    const unsubscribeItems = lystRef.collection(`categories`).orderBy("label", "asc").onSnapshot(snap => {
       const cats = snap.docs.reduce((accum, doc) => ({
         ...accum,
         [doc.id]: { id: doc.id, ...(doc.data() as ICategory) },
@@ -70,17 +66,24 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
       localDispatch(categoriesFetched(cats));
       localDispatch(setCategoriesOrder(snap.docs.map(({ id }) => id)));
     });
-  }, [lystRef]);
+
+    return () => {
+      unsubcribeLyst();
+      unsubscribeItems();
+    };
+  }, [lystId]);
 
   useEffect(() => {
+    const lystRef = db.doc(`/lysts/${lystId}`);
     return lystRef.collection("anonymousUsers").onSnapshot(snap => {
       snap.docChanges().forEach(({ doc }) => {
         dispatch(fetchUserSuccess({ id: doc.id, anonymous: true, ...(doc.data() as IStoreUser) }));
       });
     });
-  }, [activeView]);
+  }, [lystId]);
 
   useEffect(() => {
+    const lystItemsRef = db.doc(`/lysts/${lystId}`).collection(`lystItems`);
     let q: firestore.Query | firestore.CollectionReference = lystItemsRef;
 
     if (filteredCategories.length) {
@@ -99,8 +102,10 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
       dispatch(setOrderForLyst(lystId, itemOrder));
       setFetchStatus(EFetchStatus.error);
     }
-  }, [filteredCategories]);
+  }, [filteredCategories, lystId]);
 
+  if (activeView !== lystId) return null;
+  if (!activeView) return null;
   if (!lyst) return null;
 
   return (

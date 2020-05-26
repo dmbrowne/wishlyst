@@ -23,7 +23,7 @@ const GuestClaimedItems: FC<IProps> = ({ lystId, loadLimit, children, inifiniteS
   useEffect(() => {
     const claimed = getLystItemsByLyst(lystId);
     setAllClaimedItems(claimed || []);
-  }, [guestProfile, lystId]);
+  }, [getLystItemsByLyst, guestProfile, lystId]);
 
   const getMore = () => {
     const lastItemIdx = viewableClaimedItems.length - 1;

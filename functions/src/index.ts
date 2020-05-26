@@ -1,23 +1,31 @@
 import * as admin from "firebase-admin";
 
-import { createUserProfile, doesAccountExist, updateAccountProfile, ugradeAnnoymousUser } from "./auth";
+import { claimWishlystItem, increaseClaimedLystItemsCount, decreaseClaimedLystItemsCount } from "./lyst-items";
+import { createUserProfile, updateAccountDisplayName, ugradeAnnoymousUser } from "./auth";
 import { getImagesFromUrl } from "./puppeteer";
-import { generateThumbnails, removeImageAndThumbsOnLystItemDelete, convertToSingleThumb, removeImageThumbsOnRemove } from "./images";
-import { deleteAllLystItems, deleteAllAnonymousUsers, removeCategoriesFromLystItem } from "./triggers";
+import { generateThumbnails, removeImageAndThumbsOnLystItemDelete, removeImageThumbsOnRemove } from "./images";
+import { deleteAllLystItems, deleteAllAnonymousUsers, removeCategoriesFromLystItem, deleteAllCategories } from "./triggers";
 
+// if (process.env.NODE_ENV !== "production") {
+//   const credential = require("./gift-wishlyst-firebase-adminsdk-pt1at-0509e450c6.json");
+//   admin.initializeApp({ credential: admin.credential.cert(credential), databaseURL: "https://gift-wishlyst.firebaseio.com" });
+// } else {
 admin.initializeApp();
+// }
 
 module.exports = {
+  claimWishlystItem,
   createUserProfile,
-  doesAccountExist,
-  updateAccountProfile,
+  updateAccountDisplayName,
   getImagesFromUrl,
   generateThumbnails,
   removeImageAndThumbsOnLystItemDelete,
-  convertToSingleThumb,
   ugradeAnnoymousUser,
   removeImageThumbsOnRemove,
   deleteAllLystItems,
   deleteAllAnonymousUsers,
   removeCategoriesFromLystItem,
+  deleteAllCategories,
+  increaseClaimedLystItemsCount,
+  decreaseClaimedLystItemsCount,
 };

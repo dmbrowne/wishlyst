@@ -1,4 +1,4 @@
-import React, { FC, useContext } from "react";
+import React, { FC } from "react";
 import { Text, Box, Heading } from "grommet";
 import qs from "query-string";
 import { useLocation } from "react-router-dom";
@@ -7,19 +7,20 @@ import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-cont
 import AuthenticatedClaimModalContent from "./authenticated-claim-modal-content";
 import { ILystItem } from "../store/types";
 import { useStateSelector, getAmountClaimed } from "../store";
+import useLystItemActions from "../hooks/use-lyst-item-actions";
 
 interface IProps {
   onClose: () => void;
-  onClaim: (quantity: number) => void;
   lystItem: ILystItem;
 }
 
-export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem, onClaim }) => {
+export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem }) => {
   const account = useStateSelector(({ auth }) => auth.account);
   const location = useLocation();
   const currentQueryString = qs.parse(location.search);
   const queryString = qs.stringify({ ...currentQueryString, redirect: location.pathname, claim: lystItem.id });
   const amountClaimed = getAmountClaimed(lystItem.buyers);
+  const { claim } = useLystItemActions(lystItem.lystId, lystItem.id);
 
   return (
     <Modal title="Claim Item" onClose={onClose}>
@@ -38,7 +39,7 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem, onClaim }) => {
         ) : (
           <AuthenticatedClaimModalContent
             multi={lystItem.quantity > 1}
-            onClaim={onClaim}
+            onClaim={claim}
             totalQuantity={lystItem.quantity}
             maxQuantity={lystItem.quantity - amountClaimed}
           />

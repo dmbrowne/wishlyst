@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Route, RouteProps, Redirect } from "react-router-dom";
-import { AuthContext } from "../context/auth";
 import { auth } from "firebase/app";
 
 const AuthenticatedRoute: React.FC<RouteProps & { noAnonymous?: boolean }> = ({ noAnonymous, component: C, ...componentProps }) => {

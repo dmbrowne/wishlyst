@@ -1,19 +1,17 @@
-import React, { FC, useEffect, HTMLAttributes, ImgHTMLAttributes, useContext } from "react";
-import { Box, Heading, Text, BoxTypes, ResponsiveContext, Button, Grommet } from "grommet";
-import Rellax from "rellax";
+import React, { FC } from "react";
+import { Box, Text, Button, Grommet } from "grommet";
 
-import LandingHero from "../components/landing-hero";
-import hpTheme from "../themes/hp-theme";
+import LandingHero from "./landing-hero";
+import hpTheme from "../../themes/hp-theme";
 import { RouteComponentProps } from "react-router-dom";
-import { AuthContext } from "../context/auth";
-import { useStateSelector } from "../store";
+import { useStateSelector } from "../../store";
 
 const Landing: FC<RouteComponentProps> = ({ history }) => {
   const { account } = useStateSelector(({ auth }) => auth);
-
-  useEffect(() => {
-    if (account && !account.isAnonymous) history.push("/lysts");
-  }, [account]);
+  const isGuestUser = account && account.isAnonymous;
+  const isFullUser = account && !account.isAnonymous;
+  const signUpUrl = isGuestUser ? "/upgrade-account" : !account ? "/register" : null;
+  // const signUpUrl = !account ? "/register"
 
   return (
     <Grommet theme={hpTheme} full>
@@ -44,17 +42,16 @@ const Landing: FC<RouteComponentProps> = ({ history }) => {
               label={<Text color="#FCEDC2">Upgrade guest account</Text>}
             />
           ) : (
-            <Button plain onClick={() => history.push("/lysts")}>
+            <Button plain onClick={() => history.push("/app/wishlysts")}>
               <Box pad={{ horizontal: "medium" }}>
-                <Text color="#D39F03">My Lysts</Text>
+                <Text color="#D39F03">Go to my Wishlysts</Text>
               </Box>
             </Button>
           )}
         </Box>
         <LandingHero
-          onSignUp={() =>
-            !account ? history.push("/register") : account.isAnonymous ? history.push("/upgrade-account") : history.push("/lysts")
-          }
+          onSignUp={signUpUrl ? () => history.push(signUpUrl) : undefined}
+          onViewLysts={isFullUser ? () => history.push("/app/wishlysts") : undefined}
         />
       </Box>
     </Grommet>

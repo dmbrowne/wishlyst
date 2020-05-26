@@ -1,6 +1,6 @@
 import React, { createContext, FC } from "react";
 import { ICategory } from "../store/types";
-import { firestore } from "firebase/app";
+import { db } from "../firebase";
 
 interface ICategoryData {
   categoryMap: { [id: string]: ICategory };
@@ -22,7 +22,7 @@ export const CategoriesContext = createContext<ICategoryContext>({
 });
 
 const CategoriesContextProvider: FC<Props> = ({ categories, categoryMap, lystId, selectedCategories, children }) => {
-  const lystRef = firestore().doc(`/lysts/${lystId}`);
+  const lystRef = db.doc(`/lysts/${lystId}`);
   const createCategory = (label: string) => {
     const categoryRef = lystRef.collection("categories").doc();
     categoryRef.set({ label });

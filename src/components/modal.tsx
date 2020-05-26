@@ -25,10 +25,10 @@ const Modal: FC<IProps> = ({ onClose, title, primaryActions, secondaryActions, c
     bottom: 0,
     left: 0,
     transform: "translate(0,0) scale(1)",
+    animation: "none",
   };
 
   const mobileLayerProps = {
-    animation: false,
     responsive: false,
     style: mobileStyle,
   };

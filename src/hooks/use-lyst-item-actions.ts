@@ -1,40 +1,40 @@
 import { IBuyer, IUser } from "./../store/types";
 import { getAmountClaimed } from "./../store/index";
 import { GuestProfileContext } from "../context/guest-profile";
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import { ILystItem } from "../store/types";
-import { firestore } from "firebase/app";
-import { AuthContext } from "../context/auth";
-import { IClaimedItem } from "../store/types";
+import { firestore, auth, functions } from "firebase/app";
+import { db } from "../firebase";
 import { useStateSelector } from "../store";
 
-const useLystItemActions = (lystId: string, lystItemId?: string) => {
-  const { current: db } = useRef(firestore());
+const useLystItemActions = (lystId: string, lystItemId: string) => {
   const { account } = useStateSelector(({ auth }) => auth);
   const { updateGuestProfile } = useContext(GuestProfileContext);
   const lystRef = db.doc(`/lysts/${lystId}`);
   const lystItemsRef = lystRef.collection(`lystItems`);
+  const lystItemRef = lystItemsRef.doc(lystItemId);
+  const claimWishlystItem = functions().httpsCallable("claimWishlystItem");
 
-  const updateGuestClaimedAndLystInfo = (increment: number | null, lystItem: { id: string; path: string }) => {
+  const updateGuestClaimedAndLystInfo = (increment: number | null, lystItem: { path: string }) => {
     updateGuestProfile(guestProfile => {
-      const lysts = { ...(guestProfile?.lysts || {}) };
+      const lystItemsCount = { ...(guestProfile?.lystItemsCount || {}) };
       const claimedItems = { ...(guestProfile?.claimedItems || {}) };
 
       if (increment === null) {
-        delete lysts[lystId];
+        delete lystItemsCount[lystId];
         delete claimedItems[lystId];
       } else {
-        const lystCount = (lysts[lystId] || 0) + increment;
-        lysts[lystId] = lystCount || 0;
-        claimedItems[lystItem.id] = {
+        const lystCount = (lystItemsCount[lystId] || 0) + increment;
+        lystItemsCount[lystId] = lystCount || 0;
+        claimedItems[lystItemId] = {
           lystId,
           lystItemRef: lystItem.path,
-          quantity: ((claimedItems[lystItem.id] && claimedItems[lystItem.id].quantity) || 0) + increment || 0,
+          quantity: ((claimedItems[lystItemId] && claimedItems[lystItemId].quantity) || 0) + increment || 0,
           claimedAt: firestore.Timestamp.now(),
         };
       }
 
-      return { ...guestProfile, lysts, claimedItems };
+      return { ...guestProfile, lystItemsCount, claimedItems };
     });
   };
 
@@ -50,7 +50,8 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
   const updateClaimantsList = (
     lystItem: Omit<ILystItem, "id"> & { id?: string },
     user: { userId: string; displayName: string; isAnonymous: boolean },
-    increment: number | null
+    increment: number | null,
+    confirmed: boolean
   ) => {
     const { userId, displayName, isAnonymous } = user;
     const currentBuyers = lystItem.buyers || {};
@@ -71,6 +72,7 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
         userId,
         useDefaultName: true,
         isAnonymous,
+        confirmed,
       };
 
       return { ...currentBuyers, [userId]: buyDetails };
@@ -84,56 +86,56 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
     }
   };
 
-  const claimForUser = (itemId: string, increment: number | null, claimantId: string, displayName?: string) => (
-    transaction?: firestore.Transaction
-  ) => {
-    const userRef = db.doc(`users/${claimantId}`);
-    const userClaimedItemsRef = userRef.collection("claimedItems").doc(itemId);
-    const lystItemRef = lystItemsRef.doc(itemId);
+  const claimForRegisteredUser = (increment: number | null, claimantId: string, displayName?: string) => {
+    const claimantIsCurrentUser = auth().currentUser?.uid === claimantId;
+    if (claimantIsCurrentUser) return claimForCurrentUser(increment, claimantId, displayName);
+    else return claimWishlystItem({ lystId, lystItemId, increment, claimantId, displayName });
+  };
 
-    if (transaction) return performClaim(transaction);
-    else return db.runTransaction(performClaim);
+  const claimForCurrentUser = (increment: number | null, claimantId: string, displayName?: string) => {
+    const claimantIsCurrentUser = auth().currentUser?.uid === claimantId;
+    if (!claimantIsCurrentUser) {
+      throw new Error("Logged in user cannot claim this item");
+    }
+    const userRef = db.doc(`users/${claimantId}`);
+    const userClaimedItemsRef = userRef.collection("claimedItems").doc(lystItemId);
+
+    db.runTransaction(performClaim);
 
     function performClaim(transActn: firestore.Transaction) {
       const transactionFetches = [lystItemRef, userRef, userClaimedItemsRef].map(ref => transActn.get(ref));
       const { FieldValue } = firestore;
 
-      return Promise.all(transactionFetches).then(([lystItemDoc, userDoc, userLystItemDoc]) => {
+      return Promise.all(transactionFetches).then(([lystItemDoc, userDoc, userClaimedItemDoc]) => {
         const user = userDoc.data() as Omit<IUser, "id">;
-        const lystItemdata = lystItemDoc.data() as Omit<ILystItem, "id">;
+        const lystItemData = lystItemDoc.data() as Omit<ILystItem, "id">;
 
         if (increment) {
           checkLystItemCanBeIncremented(lystItemDoc, increment);
         }
 
         const buyer = { userId: claimantId, displayName: displayName || user.displayName, isAnonymous: false };
-        const updatedBuyers = updateClaimantsList(lystItemdata, buyer, increment);
-        const shouldDelete = !updatedBuyers[claimantId];
+        const updatedBuyers = updateClaimantsList(lystItemData, buyer, increment, true);
+        // const shouldDelete = !updatedBuyers[claimantId];
 
         transActn.update(lystItemDoc.ref, { buyers: updatedBuyers });
-        transActn.update(userDoc.ref, {
-          [`lysts.${lystId}`]: shouldDelete || increment === null ? FieldValue.delete() : FieldValue.increment(increment),
-        });
+        // transActn.update(userDoc.ref, {
+        //   [`lysts.${lystId}`]: shouldDelete || increment === null ? FieldValue.delete() : FieldValue.increment(increment),
+        // });
 
         if (typeof increment === "number") {
-          if (userLystItemDoc.exists) {
-            transActn.update(userLystItemDoc.ref, { lystItemRef, lystId, quantity: FieldValue.increment(increment) });
-          } else {
-            transActn.set(userLystItemDoc.ref, { lystItemRef, lystId, quantity: FieldValue.increment(increment) });
-          }
+          const set = userClaimedItemDoc.exists ? transActn.update : transActn.set;
+          const { name } = lystItemData;
+          set(userClaimedItemDoc.ref, { lystItemId, name, lystId, quantity: FieldValue.increment(increment) });
         }
       });
     }
   };
 
-  const anonymousClaim = (itemId: string, increment: number | null, claimantId: string, displayName?: string) => (
-    transaction?: firestore.Transaction
-  ) => {
+  const anonymousClaim = (increment: number | null, claimantId: string, displayName?: string) => {
     const annonUserRef = lystRef.collection("anonymousUsers").doc(claimantId);
-    const lystItemRef = lystItemsRef.doc(itemId);
 
-    if (transaction) return performClaim(transaction);
-    else return db.runTransaction(performClaim);
+    return db.runTransaction(performClaim);
 
     function performClaim(transActn: firestore.Transaction) {
       const transactionFetches = [lystItemRef, annonUserRef].map(ref => transActn.get(ref));
@@ -149,7 +151,7 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
         const lystItemdata = lystItemDoc.data() as Omit<ILystItem, "id">;
         if (increment) checkLystItemCanBeIncremented(lystItemDoc, increment);
         const buyer = { userId: claimantId, displayName: updatedDisplayName, isAnonymous: true };
-        const updatedBuyers = updateClaimantsList(lystItemdata, buyer, increment);
+        const updatedBuyers = updateClaimantsList(lystItemdata, buyer, increment, true);
 
         if (!annonUser.exists) {
           if (!displayName) throw Error("anonymous user does not exist, a displayName must be provided to create an anonymous user");
@@ -157,27 +159,23 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
         }
 
         transActn.update(lystItemRef, { buyers: updatedBuyers });
-        updateGuestClaimedAndLystInfo(increment, { path: lystItemRef.path, id: itemId });
+        updateGuestClaimedAndLystInfo(increment, { path: lystItemRef.path });
       });
     }
   };
 
-  const claim = (listItemId?: string, quantity = 1) => {
-    const itemId = listItemId || lystItemId;
-    if (!itemId) throw Error("lystItem must be provived to the hook or in the claim function");
+  const claim = (quantity = 1) => {
     if (!account) throw Error("current user needs to be authenticated to perform this action");
     const { uid, displayName, isAnonymous } = account;
     if (!displayName) throw Error("displayName required");
-    const doClaim = !isAnonymous ? claimForUser(itemId, quantity, uid) : anonymousClaim(itemId, quantity, uid, displayName);
-    doClaim();
+    const doClaim = !isAnonymous ? claimForRegisteredUser : anonymousClaim;
+    doClaim(quantity, uid, displayName);
   };
 
-  const removeClaim = (claimantId: string, isAnonymous: boolean, listItemId?: string) => {
-    const itemId = listItemId || lystItemId;
-    if (!itemId) throw Error("lystItem must be provived to the hook or in the claim function");
+  const removeClaim = (claimantId: string, isAnonymous: boolean) => {
     if (!account) throw Error("current user needs to be authenticated to perform this action");
-    const deleteClaim = isAnonymous ? anonymousClaim(itemId, null, claimantId) : claimForUser(itemId, null, claimantId);
-    deleteClaim();
+    const deleteClaim = isAnonymous ? anonymousClaim : claimForRegisteredUser;
+    deleteClaim(null, claimantId);
   };
 
   const createItem = (values: Partial<ILystItem> = {}) => {
@@ -185,7 +183,7 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
     if (values.id) {
       lystItemsRef.doc(values.id).set({ ...defaultValues, ...values, createdAt: firestore.Timestamp.now() });
     } else {
-      const newItem: Omit<ILystItem, "id"> = { ...defaultValues, createdAt: firestore.Timestamp.now() };
+      const newItem: Omit<ILystItem, "id"> = { ...defaultValues, lystId, createdAt: firestore.Timestamp.now() };
       lystItemsRef.add(newItem);
     }
   };
@@ -201,7 +199,7 @@ const useLystItemActions = (lystId: string, lystItemId?: string) => {
     updateItem,
     deleteItem,
     removeClaim,
-    claimForUser,
+    claimForRegisteredUser,
     anonymousClaim,
   };
 };

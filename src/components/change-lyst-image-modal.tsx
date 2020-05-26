@@ -3,8 +3,8 @@ import Modal from "./modal";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import FirebaseImage from "./firebase-image";
 import { Box, Tabs, Tab, ResponsiveContext } from "grommet";
-import FileInput from "./file-input";
-import ImageUpload from "./image-upload-container";
+import ImageUpload from "./image-upload";
+import ImageUploadPlaceholder from "./image-upload-placeholder";
 
 interface Props {
   onClose: () => void;
@@ -53,11 +53,12 @@ const ChangeLystImageModal: FC<Props> = ({ onClose, activeRef, onSubmit, customU
         <Tab title="Upload your own">
           <Box margin={{ top: "large" }} height="300px">
             <ImageUpload
-              noThumbnailGeneration
-              uploadRefPath={customUploadRef}
               name="lyst-header"
-              onUploadSuccess={() => onSubmit(customUploadRef)}
-            />
+              uploadRefPath={customUploadRef}
+              onUploadSuccess={uploadSnap => onSubmit(uploadSnap.ref.fullPath)}
+            >
+              {({ name, onUpload }) => <ImageUploadPlaceholder onInputFileChange={onUpload} name={name} />}
+            </ImageUpload>
           </Box>
         </Tab>
       </Tabs>

@@ -1,5 +1,5 @@
 import React, { FC, useEffect, ReactNode, ComponentType } from "react";
-import { firestore } from "firebase/app";
+import { db } from "../firebase";
 import { useDispatch, useStore } from "react-redux";
 
 import { useStateSelector } from "../store";
@@ -26,8 +26,7 @@ const UserRenderer: FC<Props> = ({ userId, empty: Empty, children }) => {
   useEffect(() => {
     if (user || userPending) return;
     dispatch(fetchUser(userId));
-    firestore()
-      .doc(`users/${userId}`)
+    db.doc(`users/${userId}`)
       .get()
       .then(doc => {
         const empty = doc.exists ? false : true;
@@ -37,7 +36,7 @@ const UserRenderer: FC<Props> = ({ userId, empty: Empty, children }) => {
         if (usr && usr.anonymous) return;
         dispatch(fetchUserSuccess({ id: doc.id, empty, ...(doc.data() as IStoreUser) }));
       });
-  }, []);
+  }, [dispatch, store, user, userId, userPending]);
 
   if (!user) return null;
   if (userPending) return null;

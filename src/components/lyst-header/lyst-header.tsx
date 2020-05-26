@@ -1,16 +1,15 @@
 import React, { FC, useState, useEffect, useContext } from "react";
 import { Box, Heading, Text, TextInput, TextArea, CheckBox, ThemeContext, Button, ResponsiveContext } from "grommet";
-import { Edit, Bookmark, Copy, Favorite, More, SettingsOption, Configure } from "grommet-icons";
+import { Edit, Favorite, More } from "grommet-icons";
 
 import SObjectFitImage from "../../styled-components/object-fit-image";
 import BorderlessButton from "../borderless-button";
 import { ILyst } from "../../store/types";
 import Modal from "../modal";
-import { SOverlayActions } from "../image-upload-component.styles";
+import { SOverlayActions } from "../../styled-components/overlay-actions";
 import ChangeLystImageModal from "../change-lyst-image-modal";
 import FirebaseImage from "../firebase-image";
 import shortenUrl from "../../utils/url-shorten";
-import { useTheme } from "styled-components";
 import { SImageContainer, SShareContainer } from "./lyst-header.styles";
 import ShortUrlDisplay from "../short-url-display";
 
@@ -28,7 +27,6 @@ interface WishLystUserActions {
 }
 
 const LystHeader: FC<IProps> = ({ lyst, editable, onUpdateDetails, saveOptions, onMore }) => {
-  const { dark } = useTheme();
   const [lystName, setLystName] = useState(lyst.name);
   const [lystDescription, setLystDescription] = useState(lyst.description || "");
   const [editMode, setEditMode] = useState<"name" | "description" | false>(false);
@@ -42,7 +40,7 @@ const LystHeader: FC<IProps> = ({ lyst, editable, onUpdateDetails, saveOptions, 
       setLystName(lyst.name);
       setLystDescription(lyst.description || "");
     }
-  }, [lyst]);
+  }, [editMode, lyst]);
 
   const onCancel = () => {
     setLystName(lyst.name);
@@ -76,16 +74,6 @@ const LystHeader: FC<IProps> = ({ lyst, editable, onUpdateDetails, saveOptions, 
       onUpdateDetails({ public: visible });
     }
     setSwitchingShare(false);
-  };
-
-  const onCopyShortUrl = () => {
-    navigator.permissions.query({ name: "clipboard-write" as "clipboard" }).then(result => {
-      if (result.state === "granted" || result.state === "prompt") {
-        if (lyst.shortUrl) {
-          navigator.clipboard.writeText(lyst.shortUrl).then(() => alert("Copied!"));
-        }
-      }
-    });
   };
 
   const imageActionButton = (

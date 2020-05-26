@@ -1,8 +1,9 @@
 import React, { useContext, FC } from "react";
 import { Formik, Form, Field, FieldProps, FormikHelpers } from "formik";
-import { FormField, TextInput, Box, ResponsiveContext, Button, Paragraph } from "grommet";
+import { Box, ResponsiveContext, Button, Paragraph } from "grommet";
 import * as Yup from "yup";
 import Spinner from "./spinner";
+import FieldInput from "./field-input";
 
 export type RegisterFormValues = {
   "family-name": string;
@@ -31,47 +32,55 @@ const RegisterAccountForm: FC<IProps> = ({ formError, onSubmit }) => {
   const initialValues: RegisterFormValues = { "family-name": "", "given-name": "", email: "", password: "", "new-password": "" };
 
   return (
-    <Formik initialValues={initialValues} onSubmit={onSubmit} isInitialValid={false} validationSchema={validationSchema}>
+    <Formik initialValues={initialValues} onSubmit={onSubmit} validateOnMount={true} validationSchema={validationSchema}>
       {({ isValid, isSubmitting }) => (
         <Form name="register-account">
           <Box direction={isMobile ? "column" : "row"} gap="small" justify="center">
             <Field name="given-name">
               {({ field, meta: { touched, initialValue, error } }: FieldProps) => (
-                <FormField style={{ flex: 1 }} label="First name" error={touched && field.value !== initialValue && error}>
-                  <TextInput {...field} />
-                </FormField>
+                <FieldInput label="First name" error={touched && field.value !== initialValue && error} style={{ flex: 1 }} {...field} />
               )}
             </Field>
             <Field name="family-name">
               {({ field, meta: { touched, initialValue, error } }: FieldProps) => (
-                <FormField style={{ flex: 1 }} label="Last name" error={touched && field.value !== initialValue && error}>
-                  <TextInput {...field} />
-                </FormField>
+                <FieldInput label="Last name" error={touched && field.value !== initialValue && error} style={{ flex: 1 }} {...field} />
               )}
             </Field>
           </Box>
 
           <Field name="email">
             {({ field, meta: { touched, initialValue, error } }: FieldProps) => (
-              <FormField margin={{ vertical: "medium" }} label="Email" error={touched && field.value !== initialValue && error}>
-                <TextInput type="email" {...field} />
-              </FormField>
+              <FieldInput
+                type="email"
+                label="Email"
+                error={touched && field.value !== initialValue && error}
+                style={{ flex: 1 }}
+                {...field}
+              />
             )}
           </Field>
 
           <Box direction={isMobile ? "column" : "row"} gap="small" justify="center" margin={{ bottom: "large" }}>
             <Field name="password">
               {({ field, meta: { touched, initialValue, error } }: FieldProps) => (
-                <FormField style={{ flex: 1 }} label="Enter your password" error={touched && field.value !== initialValue && error}>
-                  <TextInput type="password" {...field} />
-                </FormField>
+                <FieldInput
+                  type="password"
+                  label="Enter your password"
+                  error={touched && field.value !== initialValue && error}
+                  style={{ flex: 1 }}
+                  {...field}
+                />
               )}
             </Field>
             <Field name="new-password">
               {({ field, meta: { touched, initialValue, error } }: FieldProps) => (
-                <FormField style={{ flex: 1 }} label="Retype your password" error={touched && field.value !== initialValue && error}>
-                  <TextInput type="password" {...field} />
-                </FormField>
+                <FieldInput
+                  type="password"
+                  label="Retype your password"
+                  error={touched && field.value !== initialValue && error}
+                  style={{ flex: 1 }}
+                  {...field}
+                />
               )}
             </Field>
           </Box>

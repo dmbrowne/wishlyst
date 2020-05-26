@@ -1,10 +1,10 @@
 import React, { FC } from "react";
-import { Box, Text, TextInput, Button } from "grommet";
-import UserRenderer from "./user-renderer";
+import { Box, Text, Button } from "grommet";
 import Avatar from "./avatar";
 import FirebaseImage from "./firebase-image";
 import { ILystItem } from "../store/types";
-import { Add, Subtract, Trash } from "grommet-icons";
+import { Add, Subtract } from "grommet-icons";
+import { IconButton } from "gestalt";
 
 interface Props {
   lystItem: ILystItem;
@@ -43,7 +43,10 @@ const ClaimInfoList: FC<Props> = ({ lystItem, onDecrement, onIncrement, showCoun
                     </Box>
                   )}
                   {showCount && <Box pad="small" align="center" width="50px" border children={<Text>{count}</Text>} />}
-                  {onDelete && <Button icon={<Trash color="status-critical" />} onClick={() => onDelete(isAnonymous || false, userId)} />}
+                  {onDelete && (
+                    <IconButton accessibilityLabel="Remove buyer" icon="trash-can" onClick={() => onDelete(isAnonymous || false, userId)} />
+                  )}
+                  {/* {onDelete && <Button icon={<Trash color="status-critical" />} onClick={() => onDelete(isAnonymous || false, userId)} />} */}
                 </Box>
               </Box>
             </Box>

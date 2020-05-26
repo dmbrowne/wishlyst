@@ -1,12 +1,13 @@
 import React, { FC, ReactElement, useContext } from "react";
 import { SRoundedCard } from "../styled-components/rounded-card";
-import { Box, Heading, Text, BoxTypes, ResponsiveContext } from "grommet";
+import { Box, Heading, Text, BoxTypes, ResponsiveContext, Button } from "grommet";
 import { ILystItem } from "../store/types";
 import FirebaseImage from "./firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import getImgThumb, { EThumbSize } from "../utils/get-image-thumb";
 import styled, { css, useTheme } from "styled-components";
 import { getAmountClaimed } from "../store";
+import { ReactComponent as PresentSphere } from "../assets/icons/present_sphere.svg";
 
 interface IProps extends BoxTypes {
   lystItem: ILystItem;
@@ -54,15 +55,15 @@ const SEllipsisHeading = styled(Heading).attrs(() => ({
 
 const SImgContainer = styled(Box)`
   overflow: hidden;
-  height: "25vh";
+  height: 25vh;
   max-height: 150px;
   @media (min-width: 640px) {
     max-height: 200px;
   }
-  @media (min-width: 1024px) {
+  @media (min-width: 1200px) {
     max-height: 250px;
   }
-  @media (min-width: 1366px) {
+  @media (min-width: 1440px) {
     max-height: 300px;
   }
 `;
@@ -81,14 +82,24 @@ const LystItemCard: FC<IProps> = ({ lystItem, muted, footer, children, onView, .
   return (
     <SRoundedHoverCard muted={muted} justify="between" animation="slideDown" background={cardBg} pad="small" {...props}>
       <Box>
-        <SImgContainer>
-          {lystItem.thumb && (
-            <FirebaseImage imageRef={getImgThumb(lystItem.thumb, EThumbSize.large)}>
-              {imgUrl => <SObjectFitImage src={imgUrl} />}
-            </FirebaseImage>
-          )}
-        </SImgContainer>
-        <SEllipsisHeading onClick={onView} children={lystItem.name} />
+        <Button plain onClick={onView}>
+          <SImgContainer>
+            {lystItem.thumb ? (
+              <FirebaseImage imageRef={getImgThumb(lystItem.thumb, EThumbSize.large)}>
+                {imgUrl => <SObjectFitImage src={imgUrl} />}
+              </FirebaseImage>
+            ) : (
+              <Box fill background={dark ? "dark-2" : "light-1"} align="center" justify="center">
+                <Box width="90px" height="90px">
+                  <PresentSphere color={dark ? "white" : "black"} />
+                </Box>
+              </Box>
+            )}
+          </SImgContainer>
+        </Button>
+        <Box onClick={onView} style={{ cursor: "pointer" }}>
+          <SEllipsisHeading children={lystItem.name} />
+        </Box>
         <Text size={isMobile ? "xsmall" : "small"} color="neutral-1" margin={{ bottom: "medium" }}>
           Quantity: {lystItem.quantity}
         </Text>

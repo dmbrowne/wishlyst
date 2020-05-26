@@ -1,37 +1,41 @@
-import React from "react";
+import React, { FC } from "react";
 import { ThemeProvider } from "styled-components";
 import { Grommet, Box } from "grommet";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { BrowserRouter, Route, Switch, RouteComponentProps } from "react-router-dom";
 import { Provider as StoreProvider } from "react-redux";
+import "gestalt/dist/gestalt.css";
+
+import darkTheme from "./themes/black-theme";
+import hpTheme from "./themes/hp-theme";
 
 import store from "./store";
+
+import { AuthProvider } from "./context/auth";
+import ThemeModeProvider, { ThemeModeContext } from "./context/theme-mode";
+import GuestProfileProvider from "./context/guest-profile";
+
+import AuthenticatedRoute from "./components/authenticated-route";
+import UserSanityGuard from "./components/user-sanity-guard";
+import StandardLayout from "./layouts/standard";
+
 import Lists from "./pages/lists";
 import Login from "./pages/login";
 import ListDetail from "./pages/list-detail";
-import { AuthProvider } from "./context/auth";
-import darkTheme from "./themes/black-theme";
-import hpTheme from "./themes/hp-theme";
 import ClaimedItems from "./pages/claimed-items";
-import GuestProfileProvider from "./context/guest-profile";
-import Account from "./pages/account";
-import AuthenticatedRoute from "./components/authenticated-route";
-import StandardLayout from "./layouts/standard";
 import Upgrade from "./pages/upgrade";
-import ThemeModeProvider, { ThemeModeContext } from "./context/theme-mode";
-import Landing from "./pages/landing-copy";
+import Landing from "./pages/landing/landing-copy";
 import Register from "./pages/register";
-import EnterName from "./pages/enter-name";
-import UserSanityGuard from "./components/user-sanity-guard";
+import CompleteAccount from "./pages/complete-account";
+import Settings from "./pages/settings/settings";
 
-const UsageRoutes = () => (
+const UsageRoutes: FC<RouteComponentProps> = ({ match }) => (
   <UserSanityGuard>
     <StandardLayout>
       <Switch>
-        <Route noAnonymous exact path="/lysts" component={Lists} />
-        <Route path="/lysts/:id" component={ListDetail} />
-        <AuthenticatedRoute path="/claimed" component={ClaimedItems} />
-        <AuthenticatedRoute path="/my-account" component={Account} />
-        <AuthenticatedRoute path="/upgrade-account" component={Upgrade} />
+        <Route noAnonymous exact path={match.url + "/wishlysts"} component={Lists} />
+        <Route path={match.url + "/wishlysts/:id"} component={ListDetail} />
+        <AuthenticatedRoute path={match.url + "/claimed"} component={ClaimedItems} />
+        <AuthenticatedRoute path={match.url + "/settings"} component={Settings} />
       </Switch>
     </StandardLayout>
   </UserSanityGuard>
@@ -44,8 +48,9 @@ const AppRoutes = () => (
           <Switch>
             <Route path="/register" component={Register} />
             <Route path="/login" component={Login} />
-            <AuthenticatedRoute path="/complete-account" component={EnterName} />
-            <Route component={UsageRoutes} />
+            <AuthenticatedRoute path="/complete-account" component={CompleteAccount} />
+            <AuthenticatedRoute path="/upgrade-account" component={Upgrade} />
+            <Route path="/app" component={UsageRoutes} />
           </Switch>
         </Box>
       </Grommet>

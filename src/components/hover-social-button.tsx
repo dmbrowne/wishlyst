@@ -2,11 +2,13 @@ import React, { useRef } from "react";
 import { Text, Button, ButtonType } from "grommet";
 import { Google, Twitter, Facebook } from "grommet-icons";
 import { auth } from "firebase/app";
-import { HoverComponent } from "../components/hoverable-icon";
+import { HoverComponent } from "./hoverable-icon";
+import { useTheme } from "styled-components";
 
 type SocialSignIn = (provider: auth.TwitterAuthProvider | auth.GoogleAuthProvider | auth.FacebookAuthProvider) => void;
 
 export const hoverSocialButton = (provider: "facebook" | "twitter" | "google", socialSignIn: SocialSignIn) => (props: ButtonType) => {
+  const { dark } = useTheme();
   const { current: googleProvider } = useRef(new auth.GoogleAuthProvider());
   const { current: twitterProvider } = useRef(new auth.TwitterAuthProvider());
   const { current: facebookProvider } = useRef(new auth.FacebookAuthProvider());
@@ -20,7 +22,7 @@ export const hoverSocialButton = (provider: "facebook" | "twitter" | "google", s
       {hoverActive => (
         <Button
           primary
-          color="white"
+          color={dark ? "black" : "white"}
           onClick={() => socialSignIn(activeProvider)}
           icon={<Icon color={hoverActive ? "plain" : "dark-1"} />}
           label={<Text size="small" color={hoverActive ? textHoverColor : undefined} children={label} />}

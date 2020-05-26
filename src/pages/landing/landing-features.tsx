@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Heading, Text } from "grommet";
 import styled from "styled-components";
-import SObjectFitImage from "../styled-components/object-fit-image";
+import SObjectFitImage from "../../styled-components/object-fit-image";
 
 const GradientFigureBg = styled(Box)`
   background-image: linear-gradient(212deg, #fcd12a 0%, #f8e473 100%);

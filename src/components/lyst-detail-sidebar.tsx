@@ -1,12 +1,12 @@
-import React, { FC, useState, useContext, useRef } from "react";
+import React, { FC, useState, useContext } from "react";
 import { ThemeContext, Layer, Heading, Box, AccordionPanel, Text, Button, Accordion, BoxTypes, RadioButton } from "grommet";
-import { UnorderedList, Grid, FormDown, FormUp, Close, FormClose, Checkmark } from "grommet-icons";
+import { UnorderedList, Grid, FormDown, FormUp, FormClose, Checkmark, Trash } from "grommet-icons";
 import { useTheme } from "styled-components";
 import { setClaimFilter } from "../store/lysts";
 import { CategoriesContext } from "../context/categories";
 import { useDispatch } from "react-redux";
 import { useStateSelector } from "../store";
-import { firestore } from "firebase/app";
+import { db } from "../firebase";
 
 interface IProps {
   lystId: string;
@@ -30,7 +30,6 @@ const PanelContainer = (props: BoxTypes) => {
 };
 
 const LystDetailSidebar: FC<IProps> = ({ onClose, lystId, onSelectCategory, filteredCategories }) => {
-  const { current: db } = useRef(firestore());
   const dispatch = useDispatch();
   const { dark } = useTheme();
   const lystRef = db.doc(`/lysts/${lystId}`);
@@ -95,6 +94,7 @@ const LystDetailSidebar: FC<IProps> = ({ onClose, lystId, onSelectCategory, filt
                   <Box key={category.id} pad="small" gap="small" direction="row" align="center" onClick={onClick}>
                     {active && <Checkmark size="small" />}
                     <Text size="small">{category.label}</Text>
+                    <Button plain alignSelf="end" icon={<Trash size="small" />} onClick={() => deleteCategory(category.id)} />
                   </Box>
                 );
               })}

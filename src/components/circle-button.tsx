@@ -18,9 +18,7 @@ const CircleButton: FC<ICircleButton> = ({ label, backgroundColorType, icon, ...
         </Box>
         {label && typeof label === "string" ? (
           <Text textAlign="center" color={dark ? "dark-6" : "dark-3"} size="small" margin={{ top: "xsmall" }} children={label} />
-        ) : (
-          label
-        )}
+        ) : null}
       </Box>
     </Button>
   );

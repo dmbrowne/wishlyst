@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FC, useContext } from "react";
-import { Box, TextInput, FormField, Text, ThemeContext, Button, ResponsiveContext, Anchor } from "grommet";
+import { Box, Text, Button, ResponsiveContext } from "grommet";
 import styled from "styled-components";
 import { RouteComponentProps, Link } from "react-router-dom";
 import firebase, { functions, auth } from "firebase/app";
@@ -9,10 +9,11 @@ import Spinner from "../components/spinner";
 import asyncCatch from "../utils/async-catch";
 import { ReactComponent as Logo } from "../assets/icons/wishlystlogo.svg";
 import { Helmet } from "react-helmet";
-import hoverSocialButton from "./hover-social-button";
+import hoverSocialButton from "../components/hover-social-button";
 import { SAuthContainer } from "../styled-components/auth-container";
 import { STextError } from "../styled-components/text-error";
 import { useStateSelector } from "../store";
+import FieldInput from "../components/field-input";
 
 const SLogoContainer = styled(Box).attrs(props => ({
   margin: { horizontal: "large", bottom: "large" },
@@ -43,7 +44,7 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
   const mobileStyles = { display: "block", height: "auto" };
   const desktopStyles = { minHeight: 560 };
   const redirectUrl = qs.parse(location.search).redirect;
-  const loginSuccessUrl = Array.isArray(redirectUrl) ? redirectUrl[0] : redirectUrl || "/lysts";
+  const loginSuccessUrl = Array.isArray(redirectUrl) ? redirectUrl[0] : redirectUrl || "/app/wishlysts";
 
   const login = async () => {
     setShowSpinner("local");
@@ -71,7 +72,7 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
     if (!!userAccount) {
       history.push(loginSuccessUrl);
     }
-  }, [userAccount]);
+  }, [history, loginSuccessUrl, userAccount]);
 
   return (
     <>
@@ -85,12 +86,14 @@ const Authentication: FC<RouteComponentProps> = ({ history, location }) => {
               <SLogoContainer children={<Logo />} />
             </Link>
           </Box>
-          <FormField label="Email">
-            <TextInput type="email" value={email} onChange={e => setEmail(e.target.value)} />
-          </FormField>
-          <FormField label="Enter your password" error={localAuthError}>
-            <TextInput type="password" value={password} onChange={e => setPassword(e.target.value)} />
-          </FormField>
+          <FieldInput label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+          <FieldInput
+            error={localAuthError}
+            label="Enter your password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
           <Box direction="row" align="center" justify="center" margin={{ top: "small", bottom: "large" }} gap="small">
             <Button onClick={() => login()} primary label="Login" alignSelf="center" disabled={!formIsValid || !!showSpinner} />
             {showSpinner === "local" && <Spinner color="brand" />}

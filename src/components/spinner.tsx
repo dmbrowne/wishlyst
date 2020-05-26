@@ -4,7 +4,7 @@ import { useTheme } from "styled-components";
 
 export const Spinner: FC<{ color?: string; size?: "small" | "medium" }> = ({ color, size }) => {
   const theme = useTheme();
-  const fill = !!color ? theme.global?.colors?.[color]?.toString() || undefined : "#000";
+  const fill = !!color ? theme.global?.colors?.[color]?.toString() || undefined : "brand";
   const svgSize = size === "small" ? "16px" : "32px";
 
   return (

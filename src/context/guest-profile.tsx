@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, FC, useRef } from "react";
+import React, { createContext, useState, useEffect, FC } from "react";
 import { auth } from "firebase/app";
 import { IUser } from "../store/types";
 import { throttle } from "throttle-debounce";
@@ -20,11 +20,6 @@ export const GuestProfileContext = createContext<{
 const GuestProfileProvider: FC = ({ children }) => {
   const localStorageUserKey = "wishlyst@unauthenticated_user";
   const [guestProfile, setGuestProfile] = useState<IGuestProfile | null>(null);
-  const { current: updateLocalStorage } = useRef(
-    throttle(2000, (localUserData: IGuestProfile) => {
-      window.localStorage.setItem(localStorageUserKey, JSON.stringify(localUserData));
-    })
-  );
 
   useEffect(() => {
     return auth().onAuthStateChanged(account => {
@@ -33,17 +28,22 @@ const GuestProfileProvider: FC = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    const updateLocalStorage = throttle(2000, (localUserData: IGuestProfile) => {
+      window.localStorage.setItem(localStorageUserKey, JSON.stringify(localUserData));
+    });
+
     if (guestProfile) updateLocalStorage(guestProfile);
+
+    return updateLocalStorage.cancel;
   }, [guestProfile]);
 
   const hydrateAndMergeLocalStorageUser = (account: firebase.User) => {
     const userFromStorage = window.localStorage.getItem(localStorageUserKey);
 
     if (!userFromStorage || userFromStorage === "null") {
-      return setGuestProfile({ id: account.uid, lysts: {}, claimedItems: {} });
+      return setGuestProfile({ id: account.uid, lystItemsCount: {}, claimedItems: {} });
     }
     const hydratedUser = JSON.parse(userFromStorage) as IGuestProfile;
-
     setGuestProfile(hydratedUser);
   };
 

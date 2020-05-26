@@ -1,7 +1,7 @@
 import React, { useContext, FC } from "react";
 import { Heading, Text, Box, Button, ResponsiveContext } from "grommet";
-import { ReactComponent as WishlystLogo } from "../assets/icons/wishlystlogo_colored.svg";
-import { ReactComponent as GiftsMan } from "../assets/illustrations/winter-man-gifts-illustration.svg";
+import { ReactComponent as WishlystLogo } from "../../assets/icons/wishlystlogo_colored.svg";
+import { ReactComponent as GiftsMan } from "../../assets/illustrations/winter-man-gifts-illustration.svg";
 import styled from "styled-components";
 
 const SignUpButton = styled(Button).attrs(() => ({
@@ -13,7 +13,7 @@ const SignUpButton = styled(Button).attrs(() => ({
   transition: all 200ms;
 `;
 
-const LandingHero: FC<{ onSignUp: () => void }> = ({ onSignUp }) => {
+const LandingHero: FC<{ onSignUp?: () => void; onViewLysts?: () => void }> = ({ onSignUp, onViewLysts }) => {
   const isMobile = useContext(ResponsiveContext) === "small";
   const order = isMobile ? [2, 1] : [0, 2];
 
@@ -34,18 +34,23 @@ const LandingHero: FC<{ onSignUp: () => void }> = ({ onSignUp }) => {
 
             <Box alignSelf="start" margin={{ top: "large", bottom: "medium" }}>
               <Box elevation="medium" alignSelf="start" style={{ borderRadius: "15px" }}>
-                <SignUpButton onClick={onSignUp}>
-                  <Box pad="16px" style={{ borderRadius: "15px" }}>
-                    <Text textAlign="center" size={isMobile ? "medium" : "large"}>
-                      Sign up to create your first wishlyst
-                    </Text>
-                  </Box>
-                </SignUpButton>
+                {onSignUp && (
+                  <SignUpButton onClick={onSignUp}>
+                    <Box pad="16px" style={{ borderRadius: "15px" }}>
+                      <Text textAlign="center" size={isMobile ? "medium" : "large"}>
+                        Sign up to create your first wishlyst
+                      </Text>
+                    </Box>
+                  </SignUpButton>
+                )}
               </Box>
-              <Text textAlign="center" margin={{ top: "xsmall" }} weight={300}>
-                It's free!
-              </Text>
+              {onSignUp && (
+                <Text textAlign="center" margin={{ top: "xsmall" }} weight={300}>
+                  It's free!
+                </Text>
+              )}
             </Box>
+            {onViewLysts && <Button primary alignSelf="start" label="View my wishlysts" size="large" onClick={onViewLysts} />}
           </Box>
           <Box width={isMobile ? "80%" : "45%"} style={{ order: order[1], margin: "auto" }}>
             {isMobile ? <GiftsMan /> : <div style={{ width: 620, height: 406 }} children={<GiftsMan />} />}

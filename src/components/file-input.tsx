@@ -2,7 +2,7 @@ import React, { InputHTMLAttributes } from "react";
 import styled from "styled-components";
 import { Button } from "grommet";
 
-interface IProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+export interface IProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
   name: string;
 }

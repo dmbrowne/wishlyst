@@ -1,17 +1,13 @@
-import React, { FC, useContext, useEffect, useRef, useState } from "react";
+import React, { FC, useState } from "react";
 import { firestore } from "firebase/app";
 import { Text, Box, Button } from "grommet";
-import { useDispatch } from "react-redux";
 import { useHistory } from "react-router-dom";
 
-import { ILyst, ILystItem, EFetchStatus } from "../store/types";
-import LystHeader from "./lyst-header";
-import { orderedLystItemsSelector } from "../selectors";
-import useLystItemActions from "../hooks/use-lyst-item-actions";
-import { fetchItemSuccess, removeItem, setOrderForLyst } from "../store/lyst-items";
+import { ILyst, ILystItem } from "../store/types";
 import { useStateSelector } from "../store";
+import { db } from "../firebase";
+import LystHeader from "./lyst-header";
 import EditableLystItemModal, { LystItemFormFields } from "./editable-lyst-item-modal";
-import { CategoriesContext } from "../context/categories";
 import LystItemCardGridLayout from "./lyst-item-card-grid-layout";
 import EditableClaimItemModal from "./editable-claim-item-modal";
 import Modal from "./modal";
@@ -24,12 +20,8 @@ interface IProps {
 }
 
 const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems, hasFetched }) => {
-  const viewModeLocalStorageKey = "wishlyst@edit_view_mode";
   const history = useHistory();
-  const { current: db } = useRef(firestore());
-
   const account = useStateSelector(({ auth }) => auth.account);
-  const { claimForUser, anonymousClaim, removeClaim } = useLystItemActions(lyst.id);
 
   const [editModalId, setEditModalId] = useState<string | void>();
   const [claimModalItemId, setClaimModalItemId] = useState<string | void>();
@@ -46,7 +38,7 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems, hasFetched }) => {
     const deleteConfirmed = window.confirm("Are you sure you want to delete this wishlyst?");
     if (deleteConfirmed) {
       lystRef.delete();
-      history.push("/lysts");
+      history.push("/app/wishlysts");
     }
   };
 
@@ -55,19 +47,9 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems, hasFetched }) => {
 
     const unsubscribe = lystItemsRef.doc(editModalId).onSnapshot(snap => {
       if (snap.exists) snap.ref.update(values);
-      else snap.ref.set({ ...values, createdAt: firestore.Timestamp.now() });
+      else snap.ref.set({ ...values, lystId: lyst.id, createdAt: firestore.Timestamp.now() });
       unsubscribe();
     });
-  };
-
-  const claimAsUnregisteredUser = ({ userId, displayName }: { userId: string; displayName?: string }, quantity: number = 1) => {
-    if (!claimModalItemId) return console.error("claimModalItemId is not set");
-    anonymousClaim(claimModalItemId, quantity, userId, displayName)();
-  };
-
-  const claimAsRegisteredUser = (userId: string, quantity: number = 1) => {
-    if (!claimModalItemId) return console.error("claimModalItemId is not set");
-    claimForUser(claimModalItemId, quantity, userId)();
   };
 
   return (
@@ -106,15 +88,7 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems, hasFetched }) => {
           }}
         />
       )}
-      {claimModalItemId && (
-        <EditableClaimItemModal
-          onClose={() => setClaimModalItemId()}
-          onAnonymousClaim={claimAsUnregisteredUser}
-          onSelectClaimUser={claimAsRegisteredUser}
-          lystItemId={claimModalItemId}
-          onRemoveClaim={(claimantId, isAnonymous) => removeClaim(claimantId, isAnonymous, claimModalItemId)}
-        />
-      )}
+      {claimModalItemId && <EditableClaimItemModal onClose={() => setClaimModalItemId()} lystItemId={claimModalItemId} />}
       {viewMoreOptions && (
         <Modal title="More options" onClose={() => setViewMoreOptions(false)}>
           <Button primary color="status-critical" label="DELETE THIS WISHLYST" onClick={onDeleteLyst} />

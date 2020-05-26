@@ -1,9 +1,9 @@
-import React, { useRef, FC, useContext, useState } from "react";
+import React, { FC, useContext, useState } from "react";
 
-import { Box, Button, ResponsiveContext } from "grommet";
+import { Box, ResponsiveContext } from "grommet";
 import asyncCatch from "../utils/async-catch";
 import { auth, functions } from "firebase/app";
-import hoverSocialButton from "../pages/hover-social-button";
+import hoverSocialButton from "./hover-social-button";
 
 export type SocialProvider = auth.TwitterAuthProvider | auth.GoogleAuthProvider | auth.FacebookAuthProvider;
 export type SocialPlatform = "google" | "twitter" | "facebook";

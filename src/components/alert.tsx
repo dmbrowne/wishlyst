@@ -1,6 +1,6 @@
 import React, { FC, ReactNode } from "react";
 import { Box, Heading, Text, BoxTypes, Button } from "grommet";
-import { StatusWarning, StatusCritical, StatusGood, StatusInfo, StatusGoodSmall, Close, FormClose } from "grommet-icons";
+import { StatusWarning, StatusCritical, StatusGood, StatusInfo, StatusGoodSmall, FormClose } from "grommet-icons";
 import BorderlessButton from "./borderless-button";
 import { useTheme, DefaultTheme } from "styled-components";
 
@@ -63,12 +63,12 @@ const getIcon = (kind: NotificationType) => {
   }
 };
 
-const Alert: FC<Props> = ({ kind = "standard", title, text, onClick, size = "medium", icon, onDismiss }) => {
+const Alert: FC<Props> = ({ kind = "standard", title, text, children, onClick, size = "medium", icon, onDismiss }) => {
   const theme = useTheme();
   const bgColor = getBgColor(theme)(kind);
   const textColor = getTextColor(theme)(kind);
   const Icon = getIcon(kind);
-  const sizes = title && text ? ["medium", "large"] : ["medium", "large"];
+  const sizes = title && (text || children) ? ["medium", "large"] : ["medium", "large"];
   const addon = icon || <Icon size={size === "small" ? sizes[0] : sizes[1]} color={textColor} />;
 
   return (
@@ -86,7 +86,13 @@ const Alert: FC<Props> = ({ kind = "standard", title, text, onClick, size = "med
               children={title}
             />
           )}
-          {text && <Text size={size} color={textColor} children={text} />}
+          {children ? (
+            typeof children === "string"
+          ) : <Text size={size} color={textColor} children={children} /> ? (
+            children
+          ) : (
+            text && <Text size={size} color={textColor} children={text} />
+          )}
         </Box>
       </Box>
       {onClick ? (

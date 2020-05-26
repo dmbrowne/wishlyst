@@ -1,6 +1,7 @@
 import React, { useState, FC, useEffect, useRef } from "react";
 import { auth, firestore, functions } from "firebase/app";
-import { IUser, IClaimedItem } from "../store/types";
+import { db } from "../firebase";
+import { IUser } from "../store/types";
 import { SocialProvider } from "../components/social-login";
 import { IGuestProfile } from "./guest-profile";
 import { useDispatch } from "react-redux";
@@ -23,12 +24,10 @@ const UserWatcher: FC<{ userId: string }> = ({ userId, children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    return firestore()
-      .doc(`users/${userId}`)
-      .onSnapshot((userSnap: firestore.DocumentSnapshot<firestore.DocumentData>) => {
-        dispatch(fetchUserProfileSuccess({ id: userSnap.id, ...(userSnap.data() as Omit<IUser, "id">) }));
-      });
-  }, [userId]);
+    return db.doc(`users/${userId}`).onSnapshot((userSnap: firestore.DocumentSnapshot<firestore.DocumentData>) => {
+      dispatch(fetchUserProfileSuccess({ id: userSnap.id, ...(userSnap.data() as Omit<IUser, "id">) }));
+    });
+  }, [dispatch, userId]);
 
   return <>{children}</>;
 };
@@ -43,7 +42,7 @@ export const AuthProvider: FC = ({ children }) => {
     return auth().onAuthStateChanged(accnt => {
       dispatch(fetchAccountSuccess(accnt));
     });
-  }, []);
+  }, [dispatch]);
 
   const createUserAndSetAccount = (guestProfile: IGuestProfile) => ({ user: accnt }: auth.UserCredential) => {
     dispatch(fetchAccountSuccess(accnt));
