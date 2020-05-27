@@ -7,12 +7,7 @@ import { generateThumbnails, removeImageAndThumbsOnLystItemDelete, removeImageTh
 import { deleteAllLystItems, deleteAllAnonymousUsers, removeCategoriesFromLystItem, deleteAllCategories } from "./triggers";
 import { moveAllNestedLystItemsToRoot, fixCategoryData } from "./admin";
 
-// if (process.env.NODE_ENV !== "production") {
-//   const credential = require("./gift-wishlyst-firebase-adminsdk-pt1at-0509e450c6.json");
-//   admin.initializeApp({ credential: admin.credential.cert(credential), databaseURL: "https://gift-wishlyst.firebaseio.com" });
-// } else {
 admin.initializeApp();
-// }
 
 module.exports = {
   claimWishlystItem,
