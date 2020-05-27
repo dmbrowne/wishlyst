@@ -1,6 +1,12 @@
-import { ILystItem } from "../@types";
+import { ILystItem, IBuyer } from "../@types";
 
 export interface IReducerState {
+  buyers: {
+    [id: string]: IBuyer;
+  };
+  buyersByLystItemId: {
+    [id: string]: string[];
+  };
   allItems: {
     [id: string]: ILystItem;
   };
@@ -32,13 +38,21 @@ export const setClaimedLystOrder = (lystId: string, ids: string[]) => ({
   payload: { lystId, ids },
 });
 
+export const fetchBuyersSuccess = (lystItemId: string, buyers: { [id: string]: IBuyer }) => ({
+  type: "lystItems/FETCH_BUYERS_SUCCESS" as "lystItems/FETCH_BUYERS_SUCCESS",
+  payload: { lystItemId, buyers },
+});
+
 type TAction =
   | ReturnType<typeof fetchItemSuccess>
   | ReturnType<typeof setOrderForLyst>
   | ReturnType<typeof removeItem>
-  | ReturnType<typeof setClaimedLystOrder>;
+  | ReturnType<typeof setClaimedLystOrder>
+  | ReturnType<typeof fetchBuyersSuccess>;
 
 const initialState: IReducerState = {
+  buyers: {},
+  buyersByLystItemId: {},
   allItems: {},
   orderByLystId: {},
   claimedOrderByLystId: {},
@@ -72,6 +86,18 @@ function LystItemsReducer(state = initialState, action: TAction) {
         claimedOrderByLystId: {
           ...state.claimedOrderByLystId,
           [action.payload.lystId]: action.payload.ids,
+        },
+      };
+    case "lystItems/FETCH_BUYERS_SUCCESS":
+      return {
+        ...state,
+        buyers: {
+          ...state.buyers,
+          ...action.payload.buyers,
+        },
+        buyersByLystItemId: {
+          ...state.buyersByLystItemId,
+          [action.payload.lystItemId]: Object.keys(action.payload.buyers),
         },
       };
     default:
