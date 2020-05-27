@@ -34,7 +34,7 @@ export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) =
         });
     } else if (guestProfile) {
       const lystItemIds = (getLystItemsByLyst(lystId) || []).slice(0, 5);
-      Promise.all(lystItemIds.map(id => db.doc(`lysts/${lystId}/lystItems/${id}`).get())).then(snaps => {
+      Promise.all(lystItemIds.map(id => db.doc(`lystItems/${id}`).get())).then(snaps => {
         setLystItems(snaps.map(snap => ({ id: snap.id, ...(snap.data() as ILystItem) })));
       });
     }

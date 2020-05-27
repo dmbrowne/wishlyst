@@ -71,7 +71,7 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
       unsubcribeLyst();
       unsubscribeItems();
     };
-  }, [lystId]);
+  }, [lystId, dispatch]);
 
   useEffect(() => {
     const lystRef = db.doc(`/lysts/${lystId}`);
@@ -80,10 +80,10 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
         dispatch(fetchUserSuccess({ id: doc.id, anonymous: true, ...(doc.data() as IStoreUser) }));
       });
     });
-  }, [lystId]);
+  }, [lystId, dispatch]);
 
   useEffect(() => {
-    const lystItemsRef = db.doc(`/lysts/${lystId}`).collection(`lystItems`);
+    const lystItemsRef = db.collection(`/lystItems`).where(`wishlystId`, "==", lystId);
     let q: firestore.Query | firestore.CollectionReference = lystItemsRef;
 
     if (filteredCategories.length) {
@@ -102,7 +102,7 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
       dispatch(setOrderForLyst(lystId, itemOrder));
       setFetchStatus(EFetchStatus.error);
     }
-  }, [filteredCategories, lystId]);
+  }, [filteredCategories, lystId, dispatch]);
 
   if (activeView !== lystId) return null;
   if (!activeView) return null;

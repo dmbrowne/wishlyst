@@ -11,7 +11,7 @@ const useLystItemActions = (lystId: string, lystItemId: string) => {
   const { account } = useStateSelector(({ auth }) => auth);
   const { updateGuestProfile } = useContext(GuestProfileContext);
   const lystRef = db.doc(`/lysts/${lystId}`);
-  const lystItemsRef = lystRef.collection(`lystItems`);
+  const lystItemsRef = db.collection(`lystItems`);
   const lystItemRef = lystItemsRef.doc(lystItemId);
   const claimWishlystItem = functions().httpsCallable("claimWishlystItem");
 
