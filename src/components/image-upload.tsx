@@ -1,6 +1,6 @@
 import React, { useRef, FC, ReactNode, useState } from "react";
 import firebase, { storage, functions } from "firebase/app";
-import { EFetchStatus } from "../store/types";
+import { EFetchStatus } from "../@types";
 
 // export interface IProps extends Omit<IComponentProps, "onInputFileChange" | "imageRef" | "onDelete"> {
 type RenderPropArgs = {

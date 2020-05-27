@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { Box, Text, Button, Anchor } from "grommet";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { Checkmark } from "grommet-icons";
 import { useTheme } from "styled-components";
 import LystItemCard from "./lyst-item-card";

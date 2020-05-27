@@ -1,5 +1,5 @@
 import { createSelector } from "reselect";
-import { ICategory } from "./../store/types";
+import { ICategory } from "../@types";
 
 interface IReducerState {
   categoriesOrder: string[];

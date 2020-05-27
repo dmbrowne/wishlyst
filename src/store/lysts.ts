@@ -1,4 +1,4 @@
-import { ILyst } from "./types";
+import { ILyst } from "../@types";
 
 type ClaimFilterType = false | "me" | "claimed" | "unclaimed";
 export interface IReducerState {

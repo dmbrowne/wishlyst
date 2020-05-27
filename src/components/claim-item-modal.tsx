@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import Modal from "./modal";
 import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-content";
 import AuthenticatedClaimModalContent from "./authenticated-claim-modal-content";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { useStateSelector, getAmountClaimed } from "../store";
 import useLystItemActions from "../hooks/use-lyst-item-actions";
 

@@ -3,7 +3,7 @@ import { firestore } from "firebase/app";
 import { Text, Box, Button } from "grommet";
 import { useHistory } from "react-router-dom";
 
-import { ILyst, ILystItem } from "../store/types";
+import { ILyst, ILystItem } from "../@types";
 import { useStateSelector } from "../store";
 import { db } from "../firebase";
 import LystHeader from "./lyst-header";

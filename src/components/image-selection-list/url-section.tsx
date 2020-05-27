@@ -2,7 +2,7 @@ import React, { FC, useContext } from "react";
 import { Heading, Box, Button, Text, ResponsiveContext } from "grommet";
 import { firestore } from "firebase/app";
 
-import { ILystItem } from "../../store/types";
+import { ILystItem } from "../../@types";
 import Spinner from "../spinner";
 import SObjectFitImage from "../../styled-components/object-fit-image";
 

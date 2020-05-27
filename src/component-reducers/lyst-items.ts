@@ -1,4 +1,4 @@
-import { ILystItem } from "./../store/types";
+import { ILystItem } from "../@types";
 
 export interface IReducerState {
   allItems: {

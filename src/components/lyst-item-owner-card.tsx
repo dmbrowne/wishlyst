@@ -1,6 +1,6 @@
 import React, { FC, useContext } from "react";
 import LystItemCard from "./lyst-item-card";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { Box, Text, ResponsiveContext, Button } from "grommet";
 import { StatusGood } from "grommet-icons";
 import ClaimInfo from "./claim-info";

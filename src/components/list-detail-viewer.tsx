@@ -5,7 +5,7 @@ import qs from "query-string";
 
 import LystHeader from "./lyst-header";
 import ClaimItemModal from "./claim-item-modal";
-import { ILystItem, ILyst } from "../store/types";
+import { ILystItem, ILyst } from "../@types";
 import { useStateSelector, getAmountClaimed } from "../store";
 import { useStore } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";

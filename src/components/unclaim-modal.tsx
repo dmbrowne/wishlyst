@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import useLystItemActions from "../hooks/use-lyst-item-actions";
 import Modal from "./modal";
 import { Heading, Button } from "grommet";

@@ -1,5 +1,5 @@
 import React, { createContext, FC } from "react";
-import { ICategory } from "../store/types";
+import { ICategory } from "../@types";
 import { db } from "../firebase";
 
 interface ICategoryData {

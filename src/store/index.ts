@@ -1,4 +1,4 @@
-import { ILystItem } from "./types";
+import { ILystItem } from "../@types";
 import { createStore } from "redux";
 
 import reducers, { IRootReducer } from "./combined-reducers";

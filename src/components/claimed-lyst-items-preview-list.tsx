@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, FC } from "react";
 import { Heading, Box, BoxTypes } from "grommet";
 import { db } from "../firebase";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import SRoundedCard from "../styled-components/rounded-card";
 import FirebaseImage from "./firebase-image";
 import getImgThumb, { EThumbSize } from "../utils/get-image-thumb";

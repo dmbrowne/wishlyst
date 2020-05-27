@@ -2,7 +2,7 @@ import React, { FC, useContext } from "react";
 import { Box, Heading, TextArea, ResponsiveContext } from "grommet";
 import SearchableSelect from "./searchable-select";
 import ImageSelectionList, { IImageSelectionList } from "./image-selection-list";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { CategoriesContext } from "../context/categories";
 import FieldInput from "./field-input";
 import FieldInputLabel from "./field-input-label";

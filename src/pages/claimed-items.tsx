@@ -3,7 +3,7 @@ import { Heading, Text } from "grommet";
 import { Helmet } from "react-helmet";
 
 import { db } from "../firebase";
-import { ILyst, IUser } from "../store/types";
+import { ILyst, IUser } from "../@types";
 import { GuestProfileContext, IGuestProfile } from "../context/guest-profile";
 import { ClaimedLystItemsPreviewList } from "../components/claimed-lyst-items-preview-list";
 import { useStateSelector } from "../store";
