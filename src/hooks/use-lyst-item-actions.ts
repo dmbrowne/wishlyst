@@ -11,7 +11,7 @@ const useLystItemActions = (lystId: string, lystItemId: string) => {
   const { account } = useStateSelector(({ auth }) => auth);
   const { updateGuestProfile } = useContext(GuestProfileContext);
   const lystRef = db.doc(`/lysts/${lystId}`);
-  const lystItemsRef = lystRef.collection(`lystItems`);
+  const lystItemsRef = db.collection(`lystItems`);
   const lystItemRef = lystItemsRef.doc(lystItemId);
   const claimWishlystItem = functions().httpsCallable("claimWishlystItem");
 
@@ -183,7 +183,7 @@ const useLystItemActions = (lystId: string, lystItemId: string) => {
     if (values.id) {
       lystItemsRef.doc(values.id).set({ ...defaultValues, ...values, createdAt: firestore.Timestamp.now() });
     } else {
-      const newItem: Omit<ILystItem, "id"> = { ...defaultValues, lystId, createdAt: firestore.Timestamp.now() };
+      const newItem: Omit<ILystItem, "id"> = { ...defaultValues, wishlystId: lystId, createdAt: firestore.Timestamp.now() };
       lystItemsRef.add(newItem);
     }
   };

@@ -38,7 +38,7 @@ export interface IBuyer {
 
 export interface ILystItem {
   id: string;
-  lystId: string;
+  wishlystId: string;
   name: string;
   suggestedNames?: string[] | null;
   url?: string;

@@ -27,6 +27,7 @@ import Landing from "./pages/landing/landing-copy";
 import Register from "./pages/register";
 import CompleteAccount from "./pages/complete-account";
 import Settings from "./pages/settings/settings";
+import Admin from "./pages/admin";
 
 const UsageRoutes: FC<RouteComponentProps> = ({ match }) => (
   <UserSanityGuard>
@@ -36,6 +37,7 @@ const UsageRoutes: FC<RouteComponentProps> = ({ match }) => (
         <Route path={match.url + "/wishlysts/:id"} component={ListDetail} />
         <AuthenticatedRoute path={match.url + "/claimed"} component={ClaimedItems} />
         <AuthenticatedRoute path={match.url + "/settings"} component={Settings} />
+        <AuthenticatedRoute path={match.url + "/admin"} component={Admin} />
       </Switch>
     </StandardLayout>
   </UserSanityGuard>

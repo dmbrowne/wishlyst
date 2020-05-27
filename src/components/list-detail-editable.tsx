@@ -29,7 +29,7 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems, hasFetched }) => {
 
   const isLystOwner = !!account && account.uid === lyst._private.owner;
   const lystRef = db.doc(`/lysts/${lyst.id}`);
-  const lystItemsRef = lystRef.collection(`lystItems`);
+  const lystItemsRef = db.collection(`lystItems`);
 
   const updateLystData = (values: Partial<ILyst>) => lystRef.update(values);
   const addNewItem = () => setEditModalId(lystItemsRef.doc().id);

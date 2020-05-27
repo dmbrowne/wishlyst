@@ -20,7 +20,7 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem }) => {
   const currentQueryString = qs.parse(location.search);
   const queryString = qs.stringify({ ...currentQueryString, redirect: location.pathname, claim: lystItem.id });
   const amountClaimed = getAmountClaimed(lystItem.buyers);
-  const { claim } = useLystItemActions(lystItem.lystId, lystItem.id);
+  const { claim } = useLystItemActions(lystItem.wishlystId, lystItem.id);
 
   return (
     <Modal title="Claim Item" onClose={onClose}>
