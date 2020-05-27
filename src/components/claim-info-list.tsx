@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import { Box, Text, Button } from "grommet";
 import Avatar from "./avatar";
 import FirebaseImage from "./firebase-image";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { Add, Subtract } from "grommet-icons";
 import { IconButton } from "gestalt";
 

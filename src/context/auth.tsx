@@ -1,7 +1,7 @@
 import React, { useState, FC, useEffect, useRef } from "react";
 import { auth, firestore, functions } from "firebase/app";
 import { db } from "../firebase";
-import { IUser } from "../store/types";
+import { IUser } from "../@types";
 import { SocialProvider } from "../components/social-login";
 import { IGuestProfile } from "./guest-profile";
 import { useDispatch } from "react-redux";

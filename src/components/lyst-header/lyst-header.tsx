@@ -4,7 +4,7 @@ import { Edit, Favorite, More } from "grommet-icons";
 
 import SObjectFitImage from "../../styled-components/object-fit-image";
 import BorderlessButton from "../borderless-button";
-import { ILyst } from "../../store/types";
+import { ILyst } from "../../@types";
 import Modal from "../modal";
 import { SOverlayActions } from "../../styled-components/overlay-actions";
 import ChangeLystImageModal from "../change-lyst-image-modal";

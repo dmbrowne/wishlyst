@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { GuestProfileContext } from "../context/guest-profile";
-import { IClaimedItem } from "../store/types";
+import { IClaimedItem } from "../@types";
 
 const useGuestClaimedItems = () => {
   const { guestProfile } = useContext(GuestProfileContext);

@@ -1,8 +1,8 @@
-import { IBuyer, IUser } from "./../store/types";
+import { IBuyer, IUser } from "../@types";
 import { getAmountClaimed } from "./../store/index";
 import { GuestProfileContext } from "../context/guest-profile";
 import { useContext } from "react";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { firestore, auth, functions } from "firebase/app";
 import { db } from "../firebase";
 import { useStateSelector } from "../store";

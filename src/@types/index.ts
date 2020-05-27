@@ -36,6 +36,16 @@ export interface IBuyer {
   thumb?: string;
 }
 
+export interface IAlgoliaLystItem {
+  id: string;
+  wishlystId: string;
+  name: string;
+  color?: string;
+  thumbnailUrl?: string;
+  categoryId?: string;
+  buyerUserIds?: string[];
+}
+
 export interface ILystItem {
   id: string;
   wishlystId: string;

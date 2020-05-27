@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import { Box, Button } from "grommet";
 import { Filter, Add } from "grommet-icons";
 import GridListing from "../styled-components/grid-listing";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { useStateSelector } from "../store";
 import LystItemOwnerCard from "./lyst-item-owner-card";
 import LystItemClaimCard from "./lyst-item-claim-card";

@@ -15,7 +15,7 @@ import ListDetailView from "../components/list-detail-viewer";
 import ListDetailEditable from "../components/list-detail-editable";
 import { setActiveView, lystAdded } from "../store/lysts";
 import { useStateSelector } from "../store";
-import { ILyst, ICategory, ILystItem, EFetchStatus } from "../store/types";
+import { ILyst, ICategory, ILystItem, EFetchStatus } from "../@types";
 import { fetchUserSuccess, IStoreUser } from "../store/users";
 import CategoriesContextProvider from "../context/categories";
 import { Helmet } from "react-helmet";

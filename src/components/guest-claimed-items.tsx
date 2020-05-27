@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, FC, Ref, ReactNode } from "reac
 import useGuestClaimedItems from "../hooks/use-guest-claimed-items";
 import { GuestProfileContext } from "../context/guest-profile";
 import { InfiniteScroll } from "grommet";
-import { IClaimedItem } from "../store/types";
+import { IClaimedItem } from "../@types";
 
 interface IProps {
   lystId: string;

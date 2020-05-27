@@ -14,7 +14,7 @@ import { FabButton } from "../styled-components/fab-button";
 import { useStateSelector } from "../store";
 import { myLystsSelector } from "../selectors";
 import { lystAdded, setMyLystsOrder } from "../store/lysts";
-import { ILyst } from "../store/types";
+import { ILyst } from "../@types";
 import { ReactComponent as ListIcon } from "../assets/icons/list.svg";
 import FirebaseImage from "../components/firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";

@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import Modal from "./modal";
-import { ILystItem } from "../store/types";
+import { ILystItem } from "../@types";
 import { useStateSelector } from "../store";
 import { useFormik } from "formik";
 import useEditableLystItem from "../hooks/use-editable-lyst-item";

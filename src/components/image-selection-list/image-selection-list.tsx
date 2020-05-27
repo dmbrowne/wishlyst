@@ -1,6 +1,6 @@
 import React, { FC, useState, useContext } from "react";
 import { Box, BoxTypes, ResponsiveContext } from "grommet";
-import { ILystItem } from "../../store/types";
+import { ILystItem } from "../../@types";
 import getBase64FromUrl from "../../utils/get-image-from-url";
 import MainImage from "./main-image";
 import ClipboardSection from "./clipboard-section";

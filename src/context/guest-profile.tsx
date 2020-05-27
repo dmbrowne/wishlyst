@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, FC } from "react";
 import { auth } from "firebase/app";
-import { IUser } from "../store/types";
+import { IUser } from "../@types";
 import { throttle } from "throttle-debounce";
 
 export interface IGuestProfile extends Omit<IUser, "email" | "displayName" | "_private"> {}

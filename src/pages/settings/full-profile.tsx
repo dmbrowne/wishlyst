@@ -8,7 +8,7 @@ import { object, string as yupString } from "yup";
 
 import { db } from "../../firebase";
 import ImageUpload from "../../components/image-upload";
-import { IUser } from "../../store/types";
+import { IUser } from "../../@types";
 import FileInput from "../../components/file-input";
 import Spinner from "../../components/spinner";
 import { useStateSelector } from "../../store";

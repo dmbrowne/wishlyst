@@ -1,7 +1,7 @@
 import { getAmountClaimed } from "./../store/index";
 import { IRootReducer } from "./../store/combined-reducers";
 import { createSelector } from "reselect";
-import { ILyst, ILystItem } from "../store/types";
+import { ILyst, ILystItem } from "../@types";
 
 type TKeyValue<T> = { [id: string]: T };
 

@@ -1,6 +1,6 @@
 import React, { FC, useContext } from "react";
 import { Text, TextProps, ResponsiveContext } from "grommet";
-import { IBuyer } from "../store/types";
+import { IBuyer } from "../@types";
 
 interface Props {
   buyers: { [id: string]: IBuyer };
