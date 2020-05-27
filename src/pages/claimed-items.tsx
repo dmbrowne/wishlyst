@@ -43,7 +43,6 @@ const ClaimedItems = () => {
         (accum, lyst) => (lyst ? { ...accum, [lyst.id]: lyst } : accum),
         {} as { [id: string]: ILyst }
       );
-      console.log(fetchedLysts, Object.keys(existingLysts));
       return {
         order: Object.keys(existingLysts),
         lysts: existingLysts,
