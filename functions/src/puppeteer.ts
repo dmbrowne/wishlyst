@@ -2,15 +2,9 @@ import * as functions from "firebase-functions";
 
 let browserStarted = false;
 
-// const closePage = async () => {
-//   if (browser) await browser.close();
-//   else console.log("Browser not opened, so nothing to close");
-//   return true;
-// };
-
 export const getImagesFromUrl = functions.runWith({ memory: "2GB" }).https.onCall(async ({ url }) => {
   try {
-    const puppeteerBrowser = (await import("./browser")).default;
+    const puppeteerBrowser = (await import("./utils/browser")).default;
     if (!browserStarted) {
       await puppeteerBrowser.initBrowser();
       browserStarted = true;
