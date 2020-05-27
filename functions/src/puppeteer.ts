@@ -27,14 +27,14 @@ export const getImagesFromUrl = functions.runWith({ memory: "2GB" }).https.onCal
       try {
         const promises = ["image", "title", "image:type"].map(graphName => {
           return page
-            .$eval<string>(`head > meta[name='og:${graphName}']`, (element: Element) => (element as HTMLMetaElement).content)
-            .catch(() => void 0);
+            .$(`head > meta[name='og:${graphName}']`)
+            .then(async element => (element ? await element.evaluate(node => node.getAttribute("content")) : null));
         });
 
         const [image, title, mimeType, pageTitle, screenshot] = await Promise.all([
           ...promises,
           page.title(),
-          page.screenshot({ encoding: "base64", type: "jpeg", quality: 20 }),
+          page.screenshot({ encoding: "base64", type: "jpeg", quality: 30 }),
         ]);
 
         return { image, title, mimeType, pageTitle, screenshot };
