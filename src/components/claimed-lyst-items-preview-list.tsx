@@ -41,11 +41,11 @@ export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) =
   }, [getLystItemsByLyst, guestProfile, lystId, user]);
 
   return (
-    <Box direction="row" gap="small" wrap={false} overflow="auto">
+    <Box direction="row" gap="medium" wrap={false} overflow="auto">
       {lystItems.map(lystItem => (
-        <SRoundedCard key={lystItem.id} width="25%" margin={{ right: "medium" }} style={{ minWidth: 350 }}>
+        <SRoundedCard key={lystItem.id} width="35vw" style={{ flexShrink: 0 }}>
           <Box>
-            <Box height={{ max: "300px", min: "200px" }} style={{ height: "30vh" }}>
+            <Box style={{ height: "30vw" }}>
               {lystItem.thumb && (
                 <FirebaseImage imageRef={getImgThumb(lystItem.thumb, EThumbSize.large)}>
                   {imgUrl => <SObjectFitImage src={imgUrl} />}
@@ -56,7 +56,7 @@ export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) =
           </Box>
         </SRoundedCard>
       ))}
-      <Box width="25%" style={{ minWidth: 350 }} align="center" justify="center">
+      <Box width="35vw" style={{ flexShrink: 0 }} align="center" justify="center">
         <FabButton icon={<Next />} label="View all" />
       </Box>
     </Box>
