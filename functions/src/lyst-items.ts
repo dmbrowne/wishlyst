@@ -1,4 +1,4 @@
-import { ILystItem, IUser, IBuyer, ILyst } from "./types";
+import { ILystItem, IUser, IBuyer, ILyst } from "@types";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
