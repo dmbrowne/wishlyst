@@ -12,7 +12,7 @@ interface IProps {
 
 const UnclaimModal: FC<IProps> = ({ lystItem, onClose }) => {
   const { account } = useStateSelector(({ auth }) => auth);
-  const { removeClaim } = useLystItemActions(lystItem.lystId, lystItem.id);
+  const { removeClaim } = useLystItemActions(lystItem.wishlystId, lystItem.id);
 
   const onDeleteClaim = () => {
     if (!account) return;

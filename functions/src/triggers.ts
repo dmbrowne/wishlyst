@@ -4,7 +4,8 @@ import * as admin from "firebase-admin";
 export const deleteAllLystItems = functions.firestore.document("lysts/{lystId}").onDelete(async (snap, { params }) => {
   const lystItemsSnap = await admin
     .firestore()
-    .collection(`lysts/${params.lystId}/lystItems`)
+    .collection(`lystItems`)
+    .where("wishlystId", "==", params.lystId)
     .get();
   const deletions = lystItemsSnap.docs.map(doc => doc.ref.delete());
   await Promise.all(deletions);

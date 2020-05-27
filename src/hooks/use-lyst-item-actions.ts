@@ -183,7 +183,7 @@ const useLystItemActions = (lystId: string, lystItemId: string) => {
     if (values.id) {
       lystItemsRef.doc(values.id).set({ ...defaultValues, ...values, createdAt: firestore.Timestamp.now() });
     } else {
-      const newItem: Omit<ILystItem, "id"> = { ...defaultValues, lystId, createdAt: firestore.Timestamp.now() };
+      const newItem: Omit<ILystItem, "id"> = { ...defaultValues, wishlystId: lystId, createdAt: firestore.Timestamp.now() };
       lystItemsRef.add(newItem);
     }
   };
