@@ -1,4 +1,4 @@
-import React, { useState, FC } from "react";
+import React, { useState, FC, useEffect } from "react";
 import { Box, Heading, Button } from "grommet";
 import qs from "query-string";
 import { useTheme } from "styled-components";
@@ -17,6 +17,7 @@ import NameForm from "../components/name-form-with-formik";
 const CompleteAccount: FC<RouteComponentProps> = ({ location, history }) => {
   const { dark } = useTheme();
   const [createProfileError, setCreateProfileError] = useState("");
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
   const { account, user } = useStateSelector(({ auth }) => auth);
   const createUserProfile = functions().httpsCallable("createUserProfile");
   const redirectUrl = qs.parse(location.search).redirect;
@@ -36,9 +37,15 @@ const CompleteAccount: FC<RouteComponentProps> = ({ location, history }) => {
     return validationSchema
       .isValid({ firstName, lastName, displayName })
       .then(isValid => (isValid ? create() : Promise.reject()))
-      .then(() => history.push(loginSuccessUrl))
+      .then(() => setProfileUpdateSuccess(true))
       .catch(e => setCreateProfileError(e.message));
   };
+
+  useEffect(() => {
+    if (profileUpdateSuccess && user?.firstName && user.lastName) {
+      history.push(loginSuccessUrl);
+    }
+  }, [profileUpdateSuccess, loginSuccessUrl, history, user]);
 
   if (!user) {
     return (
@@ -47,7 +54,6 @@ const CompleteAccount: FC<RouteComponentProps> = ({ location, history }) => {
       </Box>
     );
   }
-
   return (
     <Box height={{ min: "100vh" }} background={dark ? undefined : "white"}>
       <Box height="80px" align="center" pad={{ vertical: "small" }} margin={{ vertical: "large" }}>
