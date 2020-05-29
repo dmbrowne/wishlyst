@@ -70,6 +70,7 @@ const EditableLystItemCardContent: FC<Props> = ({ urlGraphFetchPending, onChange
         fetchingUrlImage={urlGraphFetchPending}
         uploadPending={props.imgUploadPending}
         imgList={values.suggestedImages}
+        onUploadImageSuccess={props.onUploadImageSuccess}
         onSelectImage={props.onSelectImage}
       />
       <Box margin={{ vertical: "medium" }}>

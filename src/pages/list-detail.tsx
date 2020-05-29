@@ -23,23 +23,58 @@ import LystDetailSidebar from "../components/lyst-detail-sidebar";
 import { fetchItemSuccess } from "../component-reducers/lyst-items";
 import { removeItem, setOrderForLyst } from "../store/lyst-items";
 import { orderedLystItemsSelector } from "../selectors";
+import { Box, Heading, Text } from "grommet";
 
-const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, history }) => {
+const WishlystExistsGuard: FC<RouteComponentProps<{ id: string }>> = ({ match }) => {
   const lystId = match.params.id;
   const dispatch = useDispatch();
-  const { account } = useStateSelector(({ auth }) => auth);
   const { activeView } = useStateSelector(state => state.lysts);
-  const lyst = useStateSelector(state => state.lysts.allLysts[activeView]) as undefined | ILyst;
+  const wishlyst = useStateSelector(state => state.lysts.allLysts[activeView]) as undefined | ILyst;
+
+  const [lystNotFound, setLystNotFound] = useState(false);
+
+  useEffect(() => {
+    const lystRef = db.doc(`lysts/${lystId}`);
+    return lystRef.onSnapshot(
+      onSnapshot,
+      () => setLystNotFound(true),
+      () => {}
+    );
+    function onSnapshot(snap: firestore.DocumentSnapshot) {
+      if (snap.exists) dispatch(lystAdded({ id: snap.id, ...(snap.data() as ILyst) }));
+      else setLystNotFound(true);
+    }
+  }, [lystId, dispatch]);
+
+  if (activeView !== lystId) dispatch(setActiveView(lystId));
+
+  if (lystNotFound) {
+    return (
+      <Box fill align="center" justify="center">
+        <Heading level={3}>Ooops, wishlyst not found</Heading>
+        <Text>This wishlyst may not be public, or it could have been removed</Text>
+      </Box>
+    );
+  }
+
+  if (activeView !== lystId) return null;
+  if (!activeView) return null;
+  if (!wishlyst) return null;
+
+  return <ListDetailPage wishlyst={wishlyst} />;
+};
+const ListDetailPage: FC<{ wishlyst: ILyst }> = ({ wishlyst }) => {
+  const lystId = wishlyst.id;
+  const dispatch = useDispatch();
+  const { account } = useStateSelector(({ auth }) => auth);
   const [componentLystState, localDispatch] = useReducer(componentLystReducer, initialState);
-  const isLystOwner = lyst && account && lyst._private.owner === account.uid;
+  const isLystOwner = wishlyst && account && wishlyst._private.owner === account.uid;
   const categories = categoriesSelector(componentLystState);
   const [viewFilterMenu, setViewFilterMenu] = useState(false);
   const { filteredCategories } = componentLystState;
   const lystItems = useStateSelector(orderedLystItemsSelector);
   const [fetchStatus, setFetchStatus] = useState(EFetchStatus.initial);
   const hasFetched = fetchStatus !== EFetchStatus.initial && fetchStatus !== EFetchStatus.pending;
-
-  if (activeView !== lystId) dispatch(setActiveView(lystId));
 
   const Component = isLystOwner ? ListDetailEditable : ListDetailView;
 
@@ -55,9 +90,8 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
 
   useEffect(() => {
     const lystRef = db.doc(`/lysts/${lystId}`);
-    const unsubcribeLyst = lystRef.onSnapshot(snap => dispatch(lystAdded({ id: snap.id, ...(snap.data() as ILyst) })));
     // prettier-ignore
-    const unsubscribeItems = lystRef.collection(`categories`).orderBy("label", "asc").onSnapshot(snap => {
+    return lystRef.collection(`categories`).orderBy("label", "asc").onSnapshot(snap => {
       const cats = snap.docs.reduce((accum, doc) => ({
         ...accum,
         [doc.id]: { id: doc.id, ...(doc.data() as ICategory) },
@@ -66,11 +100,6 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
       localDispatch(categoriesFetched(cats));
       localDispatch(setCategoriesOrder(snap.docs.map(({ id }) => id)));
     });
-
-    return () => {
-      unsubcribeLyst();
-      unsubscribeItems();
-    };
   }, [lystId, dispatch]);
 
   useEffect(() => {
@@ -83,14 +112,14 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
   }, [lystId, dispatch]);
 
   useEffect(() => {
-    const lystItemsRef = db.collection(`/lystItems`).where(`wishlystId`, "==", lystId);
+    const lystItemsRef = db.collection(`lystItems`).where(`wishlystId`, "==", lystId);
     let q: firestore.Query | firestore.CollectionReference = lystItemsRef;
 
     if (filteredCategories.length) {
       q = q.where("categoryId", "in", filteredCategories);
     }
 
-    return q.orderBy("createdAt", "asc").onSnapshot(onSnapshot, () => setFetchStatus(EFetchStatus.error));
+    return q.orderBy("createdAt", "asc").onSnapshot(onSnapshot);
 
     function onSnapshot(snapshot: firestore.QuerySnapshot) {
       snapshot.docChanges().forEach(({ type, doc }) => {
@@ -100,13 +129,9 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
 
       const itemOrder = snapshot.docs.map(doc => doc.id);
       dispatch(setOrderForLyst(lystId, itemOrder));
-      setFetchStatus(EFetchStatus.error);
+      setFetchStatus(EFetchStatus.success);
     }
   }, [filteredCategories, lystId, dispatch]);
-
-  if (activeView !== lystId) return null;
-  if (!activeView) return null;
-  if (!lyst) return null;
 
   return (
     <CategoriesContextProvider
@@ -117,9 +142,9 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
     >
       <>
         <Helmet>
-          <title>{lyst.name} - Wishlyst</title>
+          <title>{wishlyst.name} - Wishlyst</title>
         </Helmet>
-        <Component lyst={lyst} onFilter={() => setViewFilterMenu(true)} lystItems={lystItems} hasFetched={hasFetched} />
+        <Component lyst={wishlyst} onFilter={() => setViewFilterMenu(true)} lystItems={lystItems} hasFetched={hasFetched} />
         {viewFilterMenu && (
           <LystDetailSidebar
             lystId={lystId}
@@ -133,4 +158,4 @@ const ListDetailPage: FC<RouteComponentProps<{ id: string }>> = ({ match, histor
   );
 };
 
-export default ListDetailPage;
+export default WishlystExistsGuard;

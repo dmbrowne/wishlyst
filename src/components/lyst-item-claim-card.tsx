@@ -4,7 +4,7 @@ import { ILystItem } from "../@types";
 import { Checkmark } from "grommet-icons";
 import { useTheme } from "styled-components";
 import LystItemCard from "./lyst-item-card";
-import { useStateSelector, getAmountClaimed } from "../store";
+import { useStateSelector } from "../store";
 
 interface IProps {
   lystItem: ILystItem;
@@ -16,13 +16,12 @@ interface IProps {
 const LystItemClaimCard: FC<IProps> = ({ lystItem, onClaim, onView, onRemoveClaim }) => {
   const { dark } = useTheme();
   const account = useStateSelector(({ auth }) => auth.account);
-  const href = lystItem.url;
-  const multiItem = lystItem.quantity > 1;
-  const userBought = account ? lystItem.buyers && lystItem.buyers[account.uid] : null;
-  const amountClaimedByUser = userBought ? userBought.count : 0;
-  const claimedCount = getAmountClaimed(lystItem.buyers);
+  const { url: href, quantity, buyerIds = [], totalClaimed } = lystItem;
+  const multiItem = quantity > 1;
+  const hasAnExistingClaim = account?.uid ? buyerIds.includes(account.uid) : false;
+  const claimedCount = totalClaimed || 0;
   const isPartiallyclaimed = claimedCount > 0;
-  const fullyClaimed = claimedCount === lystItem.quantity;
+  const fullyClaimed = claimedCount === quantity;
 
   return (
     <LystItemCard lystItem={lystItem} muted={fullyClaimed} elevation={isPartiallyclaimed ? "none" : undefined} onView={onView}>
@@ -31,7 +30,7 @@ const LystItemClaimCard: FC<IProps> = ({ lystItem, onClaim, onView, onRemoveClai
           <Text size="small">View Item</Text>
         </Anchor>
       )}
-      {fullyClaimed && amountClaimedByUser === 0 && (
+      {fullyClaimed && !hasAnExistingClaim && (
         <Text size="small" color="dark-6">
           This item has been claimed by someone else
         </Text>
@@ -41,9 +40,9 @@ const LystItemClaimCard: FC<IProps> = ({ lystItem, onClaim, onView, onRemoveClai
           <Button label="Claim" alignSelf="start" primary onClick={onClaim} />
           {multiItem && isPartiallyclaimed && (
             <>
-              {userBought ? (
+              {hasAnExistingClaim ? (
                 <Text color="dark-6" size="small">
-                  You've already claimed {amountClaimedByUser}, claim more or allow someone else to claim it too
+                  You've already put forward a claim, you can claim more or allow someone else to claim it too
                 </Text>
               ) : (
                 <Text color="dark-6" size="small">
@@ -54,7 +53,7 @@ const LystItemClaimCard: FC<IProps> = ({ lystItem, onClaim, onView, onRemoveClai
           )}
         </Box>
       )}
-      {fullyClaimed && amountClaimedByUser > 0 && (
+      {fullyClaimed && hasAnExistingClaim && (
         <>
           <Box direction="row" gap="small" align="center">
             <Box round="full" flex={{ shrink: 0 }} pad="small" background="status-ok">

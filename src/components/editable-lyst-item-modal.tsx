@@ -1,54 +1,42 @@
 import React, { FC } from "react";
 import Modal from "./modal";
-import { ILystItem } from "../@types";
+import { ILystItem, ILystItemFormFields } from "../@types";
 import { useStateSelector } from "../store";
 import { useFormik } from "formik";
 import useEditableLystItem from "../hooks/use-editable-lyst-item";
 import EditableLystItemCardContent from "./editable-lyst-item-card-content";
-
-export interface LystItemFormFields {
-  name: string;
-  url: string;
-  description?: string;
-  color?: string;
-  categoryId?: string;
-  thumb?: string | null;
-  suggestedNames?: string[] | null;
-  suggestedDescription?: string | null;
-  suggestedImages?: ILystItem["suggestedImages"];
-  quantity: number;
-}
+import { storage } from "firebase";
 
 interface Props {
   lystItemId: string;
   uploadImgPath: string;
-  onSave: (values: Partial<LystItemFormFields>) => any;
+  onSave: (values: ILystItemFormFields) => any;
   onClose: () => void;
   onDelete?: () => void;
 }
 
 const EditableLystItemModal: FC<Props> = ({ lystItemId, uploadImgPath, onSave, onClose, onDelete }) => {
   const lystItem = (useStateSelector(state => state.lystItems.allItems[lystItemId]) as ILystItem | undefined) || ({} as Partial<ILystItem>);
-  const formikData = useFormik<LystItemFormFields>({
+  const formikData = useFormik<ILystItemFormFields>({
     initialValues: {
       name: lystItem.name || "",
       url: lystItem.url || "",
-      thumb: lystItem.thumb,
       categoryId: lystItem.categoryId || "",
       color: lystItem.color || "",
       description: lystItem.description || "",
       suggestedNames: lystItem.suggestedNames || null,
-      suggestedDescription: lystItem.suggestedDescription || null,
       suggestedImages: lystItem.suggestedImages || null,
       quantity: lystItem.quantity || 1,
+      ...(lystItem.thumb ? { thumb: lystItem.thumb } : {}),
     },
-    onSubmit: (values: LystItemFormFields) => {
+    onSubmit: (values: ILystItemFormFields) => {
+      console.log(values);
       onSave(values);
       onClose();
     },
   });
 
-  const onUpdateLystItem = (lystItem: Partial<LystItemFormFields>) => {
+  const onUpdateLystItem = (lystItem: Partial<ILystItemFormFields>) => {
     Object.entries(lystItem).forEach(([key, val]) => formikData.setFieldValue(key, val));
   };
 
@@ -76,6 +64,7 @@ const EditableLystItemModal: FC<Props> = ({ lystItemId, uploadImgPath, onSave, o
         setFieldValue={formikData.setFieldValue}
         uploadImgPath={uploadImgPath}
         onDeleteImageSuccess={() => formikData.setFieldValue("thumb", null)}
+        onUploadImageSuccess={ref => formikData.setFieldValue("thumb", ref)}
         imgUploadPending={editableLystItem.imgUploadPending}
         values={formikData.values as any}
         onSelectImage={dataUrl => editableLystItem.uploadImage(dataUrl)}

@@ -4,8 +4,11 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth.uid != null;
     }
+    function getLystItem(id) {
+      return get(/databases/$(database)/documents/lystItems/$(id));
+    }
     function getLyst(id) {
-      return get(/databases/$(database)/documents/lysts/$(id));
+      return getAfter(/databases/$(database)/documents/lysts/$(id));
     }
     function lystExists(id) {
       return exists(/databases/$(database)/documents/lysts/$(id));
@@ -31,21 +34,64 @@ service cloud.firestore {
           allow read, write: if request.auth.uid == userId;
         }
       }
+
+      match /lystItems/{itemId} {
+        function hasRequiredKeys() {
+          return request.resource.data.keys().hasAll(['wishlystId', 'name', 'quantity', 'totalClaimed', 'createdAt']);
+        }
+        // for checking if lystitem exists when doing an insert
+        allow read: if isAuthenticated() && exists(/databases/$(database)/documents/lystItems/$(itemId)) == false;
+        allow read: if lystIsPublic(resource.data.wishlystId);
+        allow read: if isLystOwner(resource.data.wishlystId);
+        allow create: if hasRequiredKeys() && isLystOwner(request.resource.data.wishlystId);
+        allow update: if hasRequiredKeys() && isLystOwner(resource.data.wishlystId);
+        allow delete: if isLystOwner(resource.data.wishlystId);
+
+        match /buyers/{buyerId} {
+          function hasRequiredKeys() {
+            return request.resource.data.keys().hasAll(['displayName', 'useDefaultName', 'count', 'isAnonymous', 'confirmed', 'userId']);
+          }
+          function lystItemQuantity() {
+            return getLystItem(itemId).data.quantity
+          }
+          function totalClaimed() {
+            return getLystItem(itemId).data.totalClaimed
+          }
+          function doesNotExceedQuantity() {
+            return (totalClaimed() + request.resource.data.count) <= lystItemQuantity();
+          }
+          function documentShapeIsValid() {
+            return hasRequiredKeys() && doesNotExceedQuantity();
+          }
+          function claimForNonCurrentUser() {
+            return request.resource.data.userId != request.auth.uid && request.resource.data.confirmed == false;
+          }
+          function claimForAnonymousUser() {
+            return request.resource.data.isAnonymous == true && request.resource.data.confirmed == true;
+          }
+          function claimForCurrentUser() {
+            return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+          }
+          
+          allow create: if documentShapeIsValid() && isLystOwner(request.resource.data.wishlystId) && claimForNonCurrentUser();
+          allow create: if documentShapeIsValid() && isLystOwner(request.resource.data.wishlystId) && claimForAnonymousUser();
+          allow update: if documentShapeIsValid() && isLystOwner(resource.data.wishlystId);
+          allow read, delete: if isLystOwner(resource.data.wishlystId);
+
+          allow create, update: if documentShapeIsValid() && claimForCurrentUser()
+          allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+        }
+      }
+
       match /lysts/{lystId} {
         function isOwner (resrce) {
           return resrce.data._private.owner == request.auth.uid;
         }
-        allow read: if resource.data.public == true;
-        allow read, delete: if isOwner(resource);
+        allow read: if exists(/databases/$(database)/documents/lysts/$(lystId)) == false;
+        allow read: if resource.data.public == true || isOwner(resource);
+        allow delete: if isOwner(resource);
         allow create, update: if isOwner(request.resource);
 
-        match /lystItems/{itemId} {
-          allow read: if lystIsPublic(lystId);
-          allow read: if isLystOwner(lystId);
-          allow create: if isLystOwner(lystId) && request.resource.data.lystId == lystId;
-          allow update: if isLystOwner(lystId) && resource.data.lystId == lystId;
-          allow update: if isAuthenticated() && request.resource.data.buyers != resource.data.buyers;
-        }
         match /categories/{itemId} {
           allow read: if lystIsPublic(lystId) || isLystOwner(lystId);
           allow write: if isLystOwner(lystId);

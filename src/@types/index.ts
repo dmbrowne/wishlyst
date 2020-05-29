@@ -50,20 +50,25 @@ export interface ILystItem {
   id: string;
   wishlystId: string;
   name: string;
-  suggestedNames?: string[] | null;
   url?: string;
   description?: string;
   color?: string;
-  suggestedDescription?: string | null;
   thumb?: string;
-  suggestedImages?: (string | firestore.Blob)[] | null;
-  buyers?: {
-    [userId: string]: IBuyer;
-  };
   quantity: number;
   categoryId?: string;
+  suggestedNames?: string[] | null;
+  suggestedImages?: (string | firestore.Blob)[] | null;
+  buyerIds?: string[];
+  buyerDisplayNames?: string[];
+  totalClaimed: number;
   createdAt: firestore.Timestamp;
 }
+
+export interface ILystItemFormFields
+  extends Pick<
+    ILystItem,
+    "name" | "url" | "description" | "color" | "thumb" | "quantity" | "categoryId" | "suggestedNames" | "suggestedImages"
+  > {}
 
 export interface IClaimedItem {
   lystItemRef: string; // lystItemRef path

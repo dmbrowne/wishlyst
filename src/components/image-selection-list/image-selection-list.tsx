@@ -5,6 +5,7 @@ import getBase64FromUrl from "../../utils/get-image-from-url";
 import MainImage from "./main-image";
 import ClipboardSection from "./clipboard-section";
 import UrlSection from "./url-section";
+import { storage } from "firebase";
 
 export interface IImageSelectionList {
   name: string;
@@ -17,6 +18,7 @@ export interface IImageSelectionList {
   containerProps?: BoxTypes;
   onSelectImage?: (dataUrl: string) => Promise<any>;
   onDeleteImageSuccess: () => any;
+  onUploadImageSuccess: (task: storage.UploadTaskSnapshot) => any;
 }
 
 const ImageSelectionList: FC<IImageSelectionList> = ({
@@ -26,6 +28,7 @@ const ImageSelectionList: FC<IImageSelectionList> = ({
   imgList = [],
   containerProps,
   onSelectImage,
+  onUploadImageSuccess,
   onDeleteImageSuccess,
   ...props
 }) => {
@@ -75,6 +78,7 @@ const ImageSelectionList: FC<IImageSelectionList> = ({
         uploadRef={props.uploadRefPath}
         thumbRef={props.previewImageRef}
         onDeleteSuccess={onDeleteImageSuccess}
+        onUploadSuccess={onUploadImageSuccess}
         buttonContainerHeight={buttonContainerHeight}
         showUploadSpinner={!!uploadingUrlSrc}
       />
