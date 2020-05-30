@@ -72,11 +72,14 @@ service cloud.firestore {
           function claimForCurrentUser() {
             return isAuthenticated() && request.resource.data.userId == request.auth.uid;
           }
+          function ownsWishlyst() {
+            return isLystOwner(getLystItem(itemId).data.wishlystId)
+          }
           
-          allow create: if documentShapeIsValid() && isLystOwner(request.resource.data.wishlystId) && claimForNonCurrentUser();
-          allow create: if documentShapeIsValid() && isLystOwner(request.resource.data.wishlystId) && claimForAnonymousUser();
-          allow update: if documentShapeIsValid() && isLystOwner(resource.data.wishlystId);
-          allow read, delete: if isLystOwner(resource.data.wishlystId);
+          allow create: if documentShapeIsValid() && ownsWishlyst() && claimForNonCurrentUser();
+          allow create: if documentShapeIsValid() && ownsWishlyst() && claimForAnonymousUser();
+          allow update: if documentShapeIsValid() && ownsWishlyst();
+          allow read, delete: if ownsWishlyst();
 
           allow create, update: if documentShapeIsValid() && claimForCurrentUser()
           allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
