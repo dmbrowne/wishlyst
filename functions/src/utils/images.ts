@@ -25,7 +25,7 @@ export const resizeOriginalImage = async (filePath: string, contentType: string,
   const metadata = { contentType: contentType, metadata: { resized: true } };
 
   await sharp(tempFilePath)
-    .resize({ width: 1200 })
+    .resize({ width: 800, fit: "contain", withoutEnlargement: true })
     .toFile(resizedTempFilePath);
   await bucket.upload(resizedTempFilePath, { destination: filePath, metadata: metadata });
   await fs.unlink(resizedTempFilePath);
