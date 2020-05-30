@@ -10,7 +10,7 @@ import {
 } from "./lyst-items";
 import { createUserProfile, updateAccountDisplayName, ugradeAnnoymousUser } from "./auth";
 import { getImagesFromUrl } from "./puppeteer";
-import { generateThumbnails, removeImageAndThumbsOnLystItemDelete, removeImageThumbsOnRemove } from "./images";
+import { removeImageAndThumbsOnLystItemDelete, removeImageThumbsOnRemove, resizeImage } from "./images";
 import { deleteAllLystItems, deleteAllAnonymousUsers, removeCategoriesFromLystItem, deleteAllCategories } from "./triggers";
 import { moveAllNestedLystItemsToRoot, fixCategoryData } from "./admin";
 
@@ -20,7 +20,6 @@ module.exports = {
   createUserProfile,
   updateAccountDisplayName,
   getImagesFromUrl,
-  generateThumbnails,
   removeImageAndThumbsOnLystItemDelete,
   ugradeAnnoymousUser,
   removeImageThumbsOnRemove,
@@ -36,4 +35,5 @@ module.exports = {
   addQuickViewBuyerNameAndId,
   updateQuickViewBuyerNameAndId,
   removeQuickViewBuyerNameAndId,
+  resizeImage,
 };

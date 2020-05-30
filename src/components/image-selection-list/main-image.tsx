@@ -30,12 +30,7 @@ const MainImage: FC<IProps> = ({
   const isMobile = useContext(ResponsiveContext) === "small";
   return (
     <div style={{ width }}>
-      <ImageUpload
-        shouldGenerateThumbnail
-        uploadRefPath={uploadRef}
-        onUploadSuccess={onUploadSuccess}
-        name={`image-upload-id-${uploadRef}`}
-      >
+      <ImageUpload uploadRefPath={uploadRef} onUploadSuccess={onUploadSuccess} name={`image-upload-id-${uploadRef}`}>
         {({ name, uploadPending, onUpload, onDelete }) => {
           const isUploading = showUploadSpinner || uploadPending;
           const deleteImage = () => [onDelete, onDeleteSuccess].forEach(fn => fn());

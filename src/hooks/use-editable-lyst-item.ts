@@ -24,7 +24,6 @@ interface IUrlData {
 
 const useEditableLystItem = ({ onUpdateLystItem, uploadImgPath, values }: IProps) => {
   const { current: getOpenGraphDetails } = useRef(functions().httpsCallable("getImagesFromUrl"));
-  const { current: generateThumbnails } = useRef(functions().httpsCallable("generateThumbnails"));
   const [noGraphData, setNoGraphData] = useState(false);
   const [imgUploadPending, setImgUploadPending] = useState(false);
   const [urlGraphFetchPending, setUrlGraphFetchPending] = useState(false);
@@ -67,10 +66,6 @@ const useEditableLystItem = ({ onUpdateLystItem, uploadImgPath, values }: IProps
     //prettier-ignore
     const uploadTask = storage().ref(uploadImgPath).putString(dataUrl, format, { contentType: mimeType });
     const onError = () => setImgUploadPending(false);
-    const createThumbnails = () => {
-      const storageRef = uploadImgPath.indexOf("/") === 0 ? uploadImgPath.substring(1) : uploadImgPath;
-      return generateThumbnails({ storageRef });
-    };
     const onUploadStateChange = ({ state }: storage.UploadTaskSnapshot) => {
       if (state === storage.TaskState.RUNNING) setImgUploadPending(true);
     };
@@ -78,7 +73,6 @@ const useEditableLystItem = ({ onUpdateLystItem, uploadImgPath, values }: IProps
     return new Promise<void>(resolve => {
       uploadTask.on("state_changed", onUploadStateChange, onError);
       uploadTask.then(async taskSnapshot => {
-        await createThumbnails();
         onUpdateLystItem({ thumb: taskSnapshot.ref.fullPath });
         setImgUploadPending(false);
         resolve();
@@ -86,21 +80,10 @@ const useEditableLystItem = ({ onUpdateLystItem, uploadImgPath, values }: IProps
     });
   };
 
-  // const handleChange = <E extends React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>>(cb?: (val: string) => any) => async (e: E) => {
-  //   const value = e.target.value;
-  //   onUpdateLystItem({ [e.target.name]: value || "" });
-  //   if (cb) cb(value);
-  // };
-
   return {
-    // handleChange,
-    // resetGraphData: () => setNoGraphData(false),
-    // getGraphDataFromUrl,
     noGraphData,
     imgUploadPending,
     urlGraphFetchPending,
-    // handleUrlChange,
-    // onUploadStateChange,
     uploadImage,
   };
 };

@@ -1,16 +1,17 @@
-import { createThumbs, removeThumbs, removeFileFromStorage } from "./utils/images";
+import { removeThumbs, removeFileFromStorage, thumbnailPrefix, resizeOriginalImage } from "./utils/images";
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
 
-export const generateThumbnails = functions.runWith({ memory: "1GB" }).https.onCall(async ({ storageRef }) => {
-  const storage = admin.storage();
-  const file = storage.bucket().file(storageRef);
-  const [fileExists] = await file.exists();
-  if (!fileExists) return;
-  const [meta] = await file.getMetadata();
-  console.log("filemeta: ");
-  console.log(meta);
-  return createThumbs(meta.bucket, meta.name, meta.contentType, meta.metadata);
+export const resizeImage = functions.storage.object().onFinalize(async snapshot => {
+  if (!snapshot.name) return;
+  if (snapshot.name.startsWith(thumbnailPrefix)) return;
+  if (snapshot.metadata && snapshot.metadata.resized) return;
+
+  try {
+    await resizeOriginalImage(snapshot.name, snapshot.contentType);
+    return true;
+  } catch (e) {
+    throw Error(e.message);
+  }
 });
 
 export const removeImageAndThumbsOnLystItemDelete = functions.firestore.document("lysts/{lystId}/lystItems/{itemId}").onDelete(snapshot => {
