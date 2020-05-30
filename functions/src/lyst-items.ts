@@ -1,153 +1,89 @@
-import { ILystItem, IUser, IBuyer, ILyst } from "@types";
+import { IBuyer, ILystItem } from "@types";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-interface IClaimItemArgs {
-  lystId: string;
-  itemId: string;
-  increment: number | null;
-  claimantId: string;
-  displayName?: string;
-}
 
-const getAmountClaimed = (buyers: ILystItem["buyers"]) => {
-  const amountClaimed = Object.values(buyers || {}).reduce((total, { count }) => total + count, 0);
-  return amountClaimed;
-};
-
-const checkLystItemCanBeIncremented = (lystItemDoc: admin.firestore.DocumentSnapshot, increment: number) => {
-  const data = lystItemDoc.data() as Omit<ILystItem, "id">;
-  if (!lystItemDoc.exists) throw Error("lystItem does not exist!");
-  const claimedCount = getAmountClaimed(data.buyers);
-  if (claimedCount >= data.quantity && increment > 0) {
-    throw Error("This item has reached it max claim amount");
-  }
-};
-
-const updateClaimantsList = (
-  lystItem: Omit<ILystItem, "id"> & { id?: string },
-  user: { userId: string; displayName: string; isAnonymous: boolean },
-  increment: number | null,
-  confirmed: boolean
-) => {
-  const { userId, displayName, isAnonymous } = user;
-  const currentBuyers = lystItem.buyers || {};
-  const currentBuyByUser = currentBuyers[userId] ? currentBuyers[userId] : null;
-
-  if (increment === null) return removeBuysByUser();
-
-  if (currentBuyByUser) {
-    const newCount = currentBuyByUser.count + increment;
-    if (newCount < 1) return removeBuysByUser();
-    currentBuyByUser.count = currentBuyByUser.count + increment;
-    currentBuyByUser.displayName = displayName;
-    return { ...currentBuyers, [userId]: currentBuyByUser };
-  } else {
-    const buyDetails: IBuyer = {
-      count: !increment ? 0 : increment,
-      displayName,
-      userId,
-      useDefaultName: true,
-      isAnonymous,
-      confirmed,
-    };
-
-    return { ...currentBuyers, [userId]: buyDetails };
-  }
-
-  function removeBuysByUser() {
-    return Object.entries(currentBuyers).reduce((accum, [id, buyer]) => {
-      if (id !== userId) return { ...accum, [id]: buyer };
-      else return accum;
-    }, {} as { [userId: string]: IBuyer });
-  }
-};
-
-export const claimWishlystItem = functions.https.onCall(async (data: IClaimItemArgs, context) => {
+export const increaseClaimCount = functions.firestore.document("lystItems/{itemId}/buyers/{buyerId}").onCreate(async (snap, context) => {
   const db = admin.firestore();
-  const { claimantId, lystId, itemId, increment, displayName } = data;
-  const lystRef = db.doc(`/lysts/${lystId}`);
-  const lystSnap = await lystRef.get();
-
-  if (!lystSnap.exists) throw new functions.https.HttpsError("not-found", "the selected wishlyst doesn't exist");
-
-  const isLystOwner = (lystSnap.data() as ILyst)._private.owner === context.auth?.uid;
-  const claimantIsCurrentUser = context.auth?.uid === claimantId;
-
-  if (!isLystOwner && !claimantIsCurrentUser) {
-    throw new functions.https.HttpsError("permission-denied", "The current user doesn't have permission to update buyers on this item");
-  }
-
-  const lystItemsRef = lystRef.collection(`lystItems`);
-  const userRef = db.doc(`users/${claimantId}`);
-  const claimCollection = claimantIsCurrentUser ? "claimedItems" : "pendingClaims";
-  const userClaimedItemsRef = userRef.collection(claimCollection).doc(itemId);
-  const lystItemRef = lystItemsRef.doc(itemId);
-
-  await db.runTransaction(transaction => {
-    const transactionFetches = [lystItemRef, userRef, userClaimedItemsRef].map(ref => transaction.get(ref));
-    const { FieldValue } = admin.firestore;
-
-    return Promise.all(transactionFetches).then(([lystItemDoc, userDoc, userLystItemDoc]) => {
-      const user = userDoc.data() as Omit<IUser, "id">;
-      const lystItemdata = lystItemDoc.data() as Omit<ILystItem, "id">;
-
-      if (increment) {
-        try {
-          checkLystItemCanBeIncremented(lystItemDoc, increment);
-        } catch (e) {
-          throw new functions.https.HttpsError("internal", e.message);
-        }
-      }
-
-      const buyer = { userId: claimantId, displayName: displayName || user.displayName, isAnonymous: false };
-      const updatedBuyers = updateClaimantsList(lystItemdata, buyer, increment, claimantIsCurrentUser);
-      const shouldDelete = !updatedBuyers[claimantId];
-
-      transaction.update(lystItemDoc.ref, { buyers: updatedBuyers });
-      transaction.update(userDoc.ref, {
-        [`lysts.${lystId}`]: shouldDelete || increment === null ? FieldValue.delete() : FieldValue.increment(increment),
-      });
-
-      if (typeof increment === "number") {
-        if (userLystItemDoc.exists) {
-          transaction.update(userLystItemDoc.ref, { lystItemRef, lystId, quantity: FieldValue.increment(increment) });
-        } else {
-          transaction.set(userLystItemDoc.ref, { lystItemRef, lystId, quantity: FieldValue.increment(increment) });
-        }
-      }
-    });
+  const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
+  return db.runTransaction(async transaction => {
+    const lystItem = await transaction.get(lystItemRef);
+    const totalClaimed = (lystItem.data() as ILystItem).totalClaimed || 0;
+    const newClaimTotal = totalClaimed + (snap.data() as IBuyer).count;
+    transaction.update(lystItemRef, { totalClaimed: newClaimTotal });
   });
 });
 
-export const increaseClaimedLystItemsCount = functions.firestore
-  .document("users/{userId}/claimedItems/{itemId}")
-  .onCreate((doc, { params }) => {
-    const { lystId } = doc.data() as any;
-    if (!lystId) throw new Error("lystId does not exist on item");
-
-    return admin
-      .firestore()
-      .doc(`/users/${params.userId}`)
-      .update({
-        [`lystItemsCount.${lystId}`]: admin.firestore.FieldValue.increment(1),
-      });
+export const updateClaimCount = functions.firestore
+  .document("lystItems/{itemId}/buyers/{buyerId}")
+  .onUpdate(async ({ before, after }, context) => {
+    const db = admin.firestore();
+    const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
+    return db.runTransaction(async transaction => {
+      const lystItem = await transaction.get(lystItemRef);
+      const totalClaimed = (lystItem.data() as ILystItem).totalClaimed || 0;
+      const previousBuyerCount = (before.data() as IBuyer).count;
+      const newBuyerCount = (after.data() as IBuyer).count;
+      const countDifference = newBuyerCount - previousBuyerCount;
+      const newClaimTotal = totalClaimed + countDifference;
+      transaction.update(lystItemRef, { totalClaimed: newClaimTotal });
+    });
   });
 
-export const decreaseClaimedLystItemsCount = functions.firestore
-  .document("users/{userId}/claimedItems/{itemId}")
-  .onDelete((doc, { params }) => {
-    const { lystId } = doc.data() as any;
-    if (!lystId) throw new Error("lystId does not exist on item");
+export const removeBuyersClaimCount = functions.firestore
+  .document("lystItems/{itemId}/buyers/{buyerId}")
+  .onDelete(async (snap, context) => {
+    const db = admin.firestore();
+    const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
+    return db.runTransaction(async transaction => {
+      const lystItem = await transaction.get(lystItemRef);
+      const totalClaimed = (lystItem.data() as ILystItem).totalClaimed || 0;
+      const countBeforeDelete = (snap.data() as IBuyer).count;
+      let newClaimTotal = totalClaimed - countBeforeDelete;
+      newClaimTotal = newClaimTotal < 0 ? 0 : newClaimTotal;
+      transaction.update(lystItemRef, { totalClaimed: newClaimTotal });
+    });
+  });
 
-    return admin.firestore().runTransaction(async transaction => {
-      const ref = admin.firestore().doc(`/users/${params.userId}`);
-      const userDoc = await transaction.get(ref);
-      const currentCount = (userDoc.data() as any).lystItemsCount[lystId];
-      if (currentCount < 2) {
-        return transaction.update(ref, { [`lystItemsCount.${lystId}`]: admin.firestore.FieldValue.delete() });
-      } else {
-        return transaction.update(ref, { [`lystItemsCount.${lystId}`]: admin.firestore.FieldValue.increment(-1) });
-      }
+export const addQuickViewBuyerNameAndId = functions.firestore.document("lystItems/{itemId}/buyers/{buyerId}").onCreate((snap, context) => {
+  const db = admin.firestore();
+  const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
+  const buyer = snap.data() as IBuyer;
+  return lystItemRef.update({
+    buyerIds: admin.firestore.FieldValue.arrayUnion(buyer.userId),
+    buyerDisplayNames: admin.firestore.FieldValue.arrayUnion(buyer.displayName),
+  });
+});
+
+export const updateQuickViewBuyerNameAndId = functions.firestore
+  .document("lystItems/{itemId}/buyers/{buyerId}")
+  .onUpdate(({ before, after }, context) => {
+    const db = admin.firestore();
+    const beforeData = before.data() as IBuyer;
+    const afterData = after.data() as IBuyer;
+
+    if (!afterData.confirmed) return;
+    if (afterData.displayName === beforeData.displayName) return;
+
+    const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
+    const batch = db.batch();
+    batch.update(lystItemRef, {
+      buyerDisplayNames: admin.firestore.FieldValue.arrayRemove(beforeData.displayName),
+    });
+    batch.update(lystItemRef, {
+      buyerDisplayNames: admin.firestore.FieldValue.arrayUnion(afterData.displayName),
+    });
+    return batch.commit();
+  });
+
+export const removeQuickViewBuyerNameAndId = functions.firestore
+  .document("lystItems/{itemId}/buyers/{buyerId}")
+  .onDelete((snap, context) => {
+    const db = admin.firestore();
+    const data = snap.data() as IBuyer;
+    const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
+    return lystItemRef.update({
+      buyerIds: admin.firestore.FieldValue.arrayRemove(data.userId),
+      buyerDisplayNames: admin.firestore.FieldValue.arrayRemove(data.displayName),
     });
   });

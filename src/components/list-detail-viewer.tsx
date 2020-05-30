@@ -6,7 +6,7 @@ import qs from "query-string";
 import LystHeader from "./lyst-header";
 import ClaimItemModal from "./claim-item-modal";
 import { ILystItem, ILyst } from "../@types";
-import { useStateSelector, getAmountClaimed } from "../store";
+import { useStateSelector } from "../store";
 import { useStore } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
 import Modal from "./modal";
@@ -40,7 +40,7 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems }) => {
     if (queryMap.claim && account) {
       const lystItem = lystItems.find(item => item.id === queryMap.claim);
       if (!lystItem) return;
-      const amountClaimed = getAmountClaimed(lystItem.buyers);
+      const amountClaimed = lystItem.totalClaimed || 0;
       if (amountClaimed === lystItem.quantity) return;
       setClaimModalItem(lystItem);
     }
@@ -76,8 +76,9 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems }) => {
 
   const onRemoveClaim = (itemId: string) => {
     const lystItem = store.getState().lystItems.allItems[itemId];
+    const { buyerIds } = lystItem;
     if (!account || !lystItem) return;
-    if (Object.keys(lystItem.buyers || {}).includes(account.uid)) setUnclaimModalItem(lystItem);
+    if (buyerIds && buyerIds.includes(account.uid)) setUnclaimModalItem(lystItem);
   };
 
   return (

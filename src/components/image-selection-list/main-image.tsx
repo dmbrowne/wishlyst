@@ -1,5 +1,6 @@
 import React, { useContext, FC } from "react";
 import { Box, ResponsiveContext, Button, Text } from "grommet";
+import { storage } from "firebase/app";
 import ImageUpload from "../image-upload";
 import ImageUploadPlaceholder from "../image-upload-placeholder";
 import Spinner from "../spinner";
@@ -11,15 +12,30 @@ interface IProps {
   width: string;
   height: string;
   onDeleteSuccess: () => any;
+  onUploadSuccess: (taskSnap: storage.UploadTaskSnapshot) => any;
   buttonContainerHeight: number;
   showUploadSpinner: boolean;
 }
 
-const MainImage: FC<IProps> = ({ uploadRef, thumbRef, showUploadSpinner, onDeleteSuccess, width, height, buttonContainerHeight }) => {
+const MainImage: FC<IProps> = ({
+  uploadRef,
+  thumbRef,
+  showUploadSpinner,
+  onDeleteSuccess,
+  width,
+  height,
+  onUploadSuccess,
+  buttonContainerHeight,
+}) => {
   const isMobile = useContext(ResponsiveContext) === "small";
   return (
     <div style={{ width }}>
-      <ImageUpload shouldGenerateThumbnail uploadRefPath={uploadRef} name={`image-upload-id-${uploadRef}`}>
+      <ImageUpload
+        shouldGenerateThumbnail
+        uploadRefPath={uploadRef}
+        onUploadSuccess={onUploadSuccess}
+        name={`image-upload-id-${uploadRef}`}
+      >
         {({ name, uploadPending, onUpload, onDelete }) => {
           const isUploading = showUploadSpinner || uploadPending;
           const deleteImage = () => [onDelete, onDeleteSuccess].forEach(fn => fn());

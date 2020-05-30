@@ -4,7 +4,6 @@ import { ILystItem } from "../@types";
 import { Box, Text, ResponsiveContext, Button } from "grommet";
 import { StatusGood } from "grommet-icons";
 import ClaimInfo from "./claim-info";
-import { getAmountClaimed } from "../store";
 
 interface IProps {
   lystItem: ILystItem;
@@ -15,19 +14,19 @@ interface IProps {
 
 const LystItemOwnerCard: FC<IProps> = ({ lystItem, onView, onClaim, onViewBuyers }) => {
   const isMobile = useContext(ResponsiveContext) === "small";
-  const claimedCount = getAmountClaimed(lystItem.buyers);
-  const fullyClaimed = claimedCount === lystItem.quantity;
+  const { totalClaimed, buyerDisplayNames } = lystItem;
+  const fullyClaimed = totalClaimed === lystItem.quantity;
 
   return (
     <LystItemCard key={lystItem.id} lystItem={lystItem} onView={onView}>
       <Box direction="row">
-        {claimedCount > 0 ? (
+        {totalClaimed && totalClaimed > 0 ? (
           <Box onClick={onViewBuyers}>
             <Box direction="row" align="start" gap={isMobile ? "xxsmall" : "small"}>
               <StatusGood color={fullyClaimed ? "status-ok" : undefined} />
               <Text as="div" size="small">
                 {isMobile ? "" : "buyers: "}
-                <ClaimInfo buyers={lystItem.buyers || {}} showAmounts={false} textProps={{ size: "small", weight: "bold" }} />
+                {buyerDisplayNames && <ClaimInfo buyerNames={buyerDisplayNames} textProps={{ size: "small", weight: "bold" }} />}
               </Text>
             </Box>
           </Box>

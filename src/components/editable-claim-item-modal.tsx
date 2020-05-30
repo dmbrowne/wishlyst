@@ -5,7 +5,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 
 import ClaimInfoList from "./claim-info-list";
-import { useStateSelector, getAmountClaimed } from "../store";
+import { useStateSelector } from "../store";
 import { useTheme } from "styled-components";
 import { slugify } from "../utils/slugify";
 import FieldInput from "./field-input";
@@ -59,22 +59,16 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, lystItemId }) => {
   const { dark } = useTheme();
   const account = useStateSelector(({ auth }) => auth.account);
   const lystItem = useStateSelector(state => state.lystItems.allItems[lystItemId]);
-  const { anonymousClaim, claimForRegisteredUser, removeClaim } = useLystItemActions(lystItem.wishlystId, lystItem.id);
-  const amountClaimed = getAmountClaimed(lystItem.buyers);
-  const hasBuyers = amountClaimed > 0;
-  const completelyClaimed = amountClaimed >= lystItem.quantity;
+  const { totalClaimed } = lystItem;
+  const { createClaim, removeClaim, updateClaim, getUserClaimSnapshot } = useLystItemActions(lystItem.wishlystId, lystItem.id);
+  const hasBuyers = !!totalClaimed && totalClaimed > 0;
+  const completelyClaimed = totalClaimed && totalClaimed >= lystItem.quantity;
 
   const [selectedBuyerOption, setSelectedBuyerOption] = useState<"me" | "user" | "anonymous">("me");
   const [selectedUserId] = useState("");
 
   const validationSchema = Yup.object().shape({ displayName: Yup.string().required() });
   const anonymousForm = useFormik({ validateOnMount: true, initialValues: { displayName: "" }, validationSchema, onSubmit: () => {} });
-
-  const onBtnIncrement = (isAnon: boolean, userId: string, increment: "asc" | "desc") => {
-    const incrementValue = increment === "asc" ? 1 : -1;
-    if (isAnon) anonymousClaim(incrementValue, userId);
-    else claimForRegisteredUser(incrementValue, userId);
-  };
 
   const addFormIsValid = () => {
     if (selectedBuyerOption === "me") return true;
@@ -83,15 +77,26 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, lystItemId }) => {
     else return false;
   };
 
+  const anonClaim = async (userId: string, count: number, displayName: string) => {
+    const snap = await getUserClaimSnapshot(userId);
+    if (snap) return updateClaim(userId, { count, displayName });
+    return createClaim(count, userId, displayName);
+  };
+
+  const userClaim = async (userId: string, count: number) => {
+    const snap = await getUserClaimSnapshot(userId);
+    if (snap) return updateClaim(userId, { count });
+    return createClaim(count, userId);
+  };
+
   const onAddSubmit = () => {
     if (!account) return;
-    if (selectedBuyerOption === "me") return claimForRegisteredUser(1, account.uid);
-    if (selectedBuyerOption === "user") return claimForRegisteredUser(1, selectedUserId);
+    if (selectedBuyerOption === "me") return userClaim(account.uid, 1);
+    if (selectedBuyerOption === "user") return userClaim(selectedUserId, 1);
     if (selectedBuyerOption === "anonymous") {
       const displayName = anonymousForm.values.displayName;
       const userId = slugify(displayName);
-      anonymousClaim(1, userId, displayName);
-      return anonymousForm.resetForm();
+      return anonClaim(userId, 1, displayName).then(() => anonymousForm.resetForm());
     } else {
       return false;
     }
@@ -103,9 +108,8 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, lystItemId }) => {
       <ClaimInfoList
         lystItem={lystItem}
         showCount={lystItem.quantity > 1}
-        onIncrement={(anon, id) => onBtnIncrement(anon, id, "asc")}
-        onDecrement={(anon, id) => onBtnIncrement(anon, id, "desc")}
-        onDelete={(anon, id) => removeClaim(id, anon)}
+        onUpdateCount={(buyId, count) => updateClaim(buyId, { count })}
+        onDeleteBuyer={removeClaim}
       />
 
       {hasBuyers && !completelyClaimed && <Heading level={5}>Add more buyers:</Heading>}

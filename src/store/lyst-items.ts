@@ -1,6 +1,12 @@
-import { ILystItem } from "../@types";
+import { ILystItem, IBuyer } from "../@types";
 
 export interface IReducerState {
+  buyers: {
+    [id: string]: IBuyer;
+  };
+  buyersByLystItemId: {
+    [id: string]: string[];
+  };
   allItems: {
     [id: string]: ILystItem;
   };
@@ -32,13 +38,27 @@ export const setClaimedLystOrder = (lystId: string, ids: string[]) => ({
   payload: { lystId, ids },
 });
 
+export const fetchBuyerSuccess = (lystItemId: string, buyer: IBuyer & { id: string }) => ({
+  type: "lystItems/FETCH_BUYER_SUCCESS" as "lystItems/FETCH_BUYER_SUCCESS",
+  payload: { lystItemId, buyer },
+});
+
+export const deleteBuyerSuccess = (lystItemId: string, buyerId: string) => ({
+  type: "lystItems/DELETE_BUYER_SUCCESS" as "lystItems/DELETE_BUYER_SUCCESS",
+  payload: { lystItemId, buyerId },
+});
+
 type TAction =
   | ReturnType<typeof fetchItemSuccess>
   | ReturnType<typeof setOrderForLyst>
   | ReturnType<typeof removeItem>
-  | ReturnType<typeof setClaimedLystOrder>;
+  | ReturnType<typeof setClaimedLystOrder>
+  | ReturnType<typeof fetchBuyerSuccess>
+  | ReturnType<typeof deleteBuyerSuccess>;
 
 const initialState: IReducerState = {
+  buyers: {},
+  buyersByLystItemId: {},
   allItems: {},
   orderByLystId: {},
   claimedOrderByLystId: {},
@@ -72,6 +92,35 @@ function LystItemsReducer(state = initialState, action: TAction) {
         claimedOrderByLystId: {
           ...state.claimedOrderByLystId,
           [action.payload.lystId]: action.payload.ids,
+        },
+      };
+    case "lystItems/FETCH_BUYER_SUCCESS":
+      return {
+        ...state,
+        buyers: {
+          ...state.buyers,
+          [action.payload.buyer.id]: action.payload.buyer,
+        },
+        buyersByLystItemId: {
+          ...state.buyersByLystItemId,
+          [action.payload.lystItemId]: [...(state.buyersByLystItemId[action.payload.lystItemId] || []), action.payload.buyer.id],
+        },
+      };
+    case "lystItems/DELETE_BUYER_SUCCESS":
+      return {
+        ...state,
+        buyers: Object.entries(state.buyers).reduce(
+          (accum, [buyerId, buyer]) => ({
+            ...accum,
+            ...(action.payload.buyerId !== buyerId ? { [buyerId]: buyer } : {}),
+          }),
+          {} as { [id: string]: IBuyer }
+        ),
+        buyersByLystItemId: {
+          ...state.buyersByLystItemId,
+          [action.payload.lystItemId]: state.buyersByLystItemId[action.payload.lystItemId].filter(
+            buyerId => buyerId !== action.payload.lystItemId
+          ),
         },
       };
     default:

@@ -1,4 +1,3 @@
-import { getAmountClaimed } from "./../store/index";
 import { IRootReducer } from "./../store/combined-reducers";
 import { createSelector } from "reselect";
 import { ILyst, ILystItem } from "../@types";
@@ -22,12 +21,11 @@ export const orderedLystItemsSelector = createSelector(
         let add = false;
 
         if (!!item) {
-          const buyers = item.buyers || {};
-          const claimedCount = getAmountClaimed(buyers);
+          const claimedCount = item.totalClaimed || 0;
 
           if (!claimFilter) add = true;
           if (claimFilter === "claimed" && claimedCount > 0) add = true;
-          if (claimFilter === "me" && !!accountId && Object.keys(buyers).includes(accountId)) add = true;
+          if (claimFilter === "me" && !!accountId && (item.buyerIds || []).includes(accountId)) add = true;
           if (claimFilter === "unclaimed" && claimedCount === 0) add = true;
         }
 

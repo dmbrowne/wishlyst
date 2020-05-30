@@ -1,16 +1,16 @@
 import React, { FC, useState } from "react";
-import { firestore } from "firebase/app";
 import { Text, Box, Button } from "grommet";
 import { useHistory } from "react-router-dom";
 
-import { ILyst, ILystItem } from "../@types";
+import { ILyst, ILystItem, ILystItemFormFields } from "../@types";
 import { useStateSelector } from "../store";
 import { db } from "../firebase";
 import LystHeader from "./lyst-header";
-import EditableLystItemModal, { LystItemFormFields } from "./editable-lyst-item-modal";
+import EditableLystItemModal from "./editable-lyst-item-modal";
 import LystItemCardGridLayout from "./lyst-item-card-grid-layout";
 import EditableClaimItemModal from "./editable-claim-item-modal";
 import Modal from "./modal";
+import { firestore } from "firebase/app";
 
 interface IProps {
   lyst: ILyst;
@@ -42,13 +42,23 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems, hasFetched }) => {
     }
   };
 
-  const onEditLystItemModalSave = (values: Partial<LystItemFormFields>) => {
+  const onEditLystItemModalSave = (values: ILystItemFormFields) => {
     if (!editModalId) return;
 
-    const unsubscribe = lystItemsRef.doc(editModalId).onSnapshot(snap => {
-      if (snap.exists) snap.ref.update(values);
-      else snap.ref.set({ ...values, lystId: lyst.id, createdAt: firestore.Timestamp.now() });
-      unsubscribe();
+    return db.runTransaction(async transaction => {
+      const lystItemRef = db.doc(`lystItems/${editModalId}`) as firestore.DocumentReference<Omit<ILystItem, "id">>;
+      const lystItemSnapshot = await transaction.get(lystItemRef);
+      const newItemData = {
+        ...values,
+        wishlystId: lyst.id,
+        totalClaimed: 0,
+        createdAt: firestore.Timestamp.now(),
+      };
+      console.log(newItemData);
+      if (lystItemSnapshot.exists) transaction.update(lystItemRef, values);
+      else {
+        transaction.set<Omit<ILystItem, "id">>(lystItemRef, newItemData);
+      }
     });
   };
 

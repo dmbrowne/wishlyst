@@ -1,17 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Route, RouteProps, Redirect } from "react-router-dom";
-import { auth } from "firebase/app";
+import { useStateSelector } from "../store";
 
 const AuthenticatedRoute: React.FC<RouteProps & { noAnonymous?: boolean }> = ({ noAnonymous, component: C, ...componentProps }) => {
-  const [account, setAccount] = useState();
-  const [initalFetched, setInitialFetched] = useState(false);
+  const { account, initialFetched } = useStateSelector(state => state.auth);
 
-  auth().onAuthStateChanged(userAccount => {
-    setAccount(userAccount);
-    setInitialFetched(true);
-  });
-
-  if (!initalFetched) return null;
+  if (!initialFetched) return null;
 
   return (
     <>

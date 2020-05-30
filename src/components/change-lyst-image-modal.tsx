@@ -40,6 +40,7 @@ const ChangeLystImageModal: FC<Props> = ({ onClose, activeRef, onSubmit, customU
               const isSelected = imageRef === selected;
               return (
                 <Box
+                  key={imageRef}
                   onClick={() => setSelected(imageRef)}
                   style={{ width: isMobile ? "33%" : "25%", height: isMobile ? 100 : 150, borderRadius: 12, overflow: "hidden" }}
                   border={isActive ? { size: "5px", color: "brand" } : isSelected ? { color: "brand" } : true}

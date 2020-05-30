@@ -6,8 +6,9 @@ import Modal from "./modal";
 import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-content";
 import AuthenticatedClaimModalContent from "./authenticated-claim-modal-content";
 import { ILystItem } from "../@types";
-import { useStateSelector, getAmountClaimed } from "../store";
+import { useStateSelector } from "../store";
 import useLystItemActions from "../hooks/use-lyst-item-actions";
+import { firestore } from "firebase/app";
 
 interface IProps {
   onClose: () => void;
@@ -19,8 +20,19 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem }) => {
   const location = useLocation();
   const currentQueryString = qs.parse(location.search);
   const queryString = qs.stringify({ ...currentQueryString, redirect: location.pathname, claim: lystItem.id });
-  const amountClaimed = getAmountClaimed(lystItem.buyers);
-  const { claim } = useLystItemActions(lystItem.wishlystId, lystItem.id);
+  const hasAnExistingClaim = account?.uid && lystItem.buyerIds ? lystItem.buyerIds.includes(account.uid) : false;
+  const { createClaim, getUserClaimSnapshot } = useLystItemActions(lystItem.wishlystId, lystItem.id);
+
+  const claim = async (incrementcount: number) => {
+    if (!account) return;
+
+    if (hasAnExistingClaim) {
+      const currentClaimSnapshot = await getUserClaimSnapshot(account.uid);
+      if (!currentClaimSnapshot) throw Error("claim for existing claim not found");
+      return currentClaimSnapshot.ref.update({ count: firestore.FieldValue.increment(incrementcount) });
+    }
+    return createClaim(incrementcount, account.uid, account.isAnonymous ? account.displayName || undefined : undefined);
+  };
 
   return (
     <Modal title="Claim Item" onClose={onClose}>
@@ -41,7 +53,7 @@ export const ClaimItemModal: FC<IProps> = ({ onClose, lystItem }) => {
             multi={lystItem.quantity > 1}
             onClaim={claim}
             totalQuantity={lystItem.quantity}
-            maxQuantity={lystItem.quantity - amountClaimed}
+            maxQuantity={lystItem.quantity - (lystItem.totalClaimed || 0)}
           />
         )}
       </Box>

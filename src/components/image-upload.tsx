@@ -41,13 +41,12 @@ export const ImageUpload: FC<IProps> = ({ children, ...props }) => {
 
     const uploadTask = imagesRef.put(file, contentType ? { contentType } : undefined);
 
-    if (onUploadStateChange)
-      uploadTask.on("state_changed", taskSnapshot => {
-        onUploadStateChange(taskSnapshot);
-        if (taskSnapshot.state === firebase.storage.TaskState.RUNNING) setUploadStatus(EFetchStatus.pending);
-        if (taskSnapshot.state === firebase.storage.TaskState.ERROR) setUploadStatus(EFetchStatus.error);
-        if (taskSnapshot.state === firebase.storage.TaskState.CANCELED) setUploadStatus(EFetchStatus.initial);
-      });
+    uploadTask.on("state_changed", taskSnapshot => {
+      if (onUploadStateChange) onUploadStateChange(taskSnapshot);
+      if (taskSnapshot.state === firebase.storage.TaskState.RUNNING) setUploadStatus(EFetchStatus.pending);
+      if (taskSnapshot.state === firebase.storage.TaskState.ERROR) setUploadStatus(EFetchStatus.error);
+      if (taskSnapshot.state === firebase.storage.TaskState.CANCELED) setUploadStatus(EFetchStatus.initial);
+    });
 
     uploadTask.then(async taskSnapshot => {
       if (shouldGenerateThumbnail) await generateThumbnails({ storageRef: uploadRefPath });

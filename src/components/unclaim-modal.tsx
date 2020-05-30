@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useState, useEffect } from "react";
 import { ILystItem } from "../@types";
 import useLystItemActions from "../hooks/use-lyst-item-actions";
 import Modal from "./modal";
@@ -12,11 +12,23 @@ interface IProps {
 
 const UnclaimModal: FC<IProps> = ({ lystItem, onClose }) => {
   const { account } = useStateSelector(({ auth }) => auth);
-  const { removeClaim } = useLystItemActions(lystItem.wishlystId, lystItem.id);
+  const [currentClaimId, setCurrentClaimId] = useState<null | string>(null);
+  const { removeClaim, getUserClaimSnapshot } = useLystItemActions(lystItem.wishlystId, lystItem.id);
+
+  useEffect(() => {
+    getAndSetUserClaim();
+
+    async function getAndSetUserClaim() {
+      if (!account) return;
+      const snap = await getUserClaimSnapshot(account.uid);
+      if (snap) setCurrentClaimId(snap.id);
+    }
+  }, [account, getUserClaimSnapshot]);
 
   const onDeleteClaim = () => {
-    if (!account) return;
-    removeClaim(account.uid, account.isAnonymous);
+    if (currentClaimId) {
+      removeClaim(currentClaimId);
+    }
     onClose();
   };
 

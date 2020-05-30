@@ -1,30 +1,25 @@
 import React, { FC, useContext } from "react";
 import { Text, TextProps, ResponsiveContext } from "grommet";
-import { IBuyer } from "../@types";
 
 interface Props {
-  buyers: { [id: string]: IBuyer };
-  showAmounts?: boolean;
+  buyerNames: string[];
   textProps?: TextProps;
 }
 
-const ClaimInfo: FC<Props> = ({ buyers, showAmounts, textProps }) => {
+const ClaimInfo: FC<Props> = ({ buyerNames, textProps }) => {
   const isMobile = useContext(ResponsiveContext) === "small";
-  const buyersMap = new Map(Object.entries(buyers || {}));
 
   return (
     <>
-      {Array.from(buyersMap.entries()).map(([userId, buyDetails], idx, arr) => {
+      {buyerNames.map((name, idx, arr) => {
         const isFirst = idx !== 0;
         const isLast = idx + 1 === arr.length;
         const hasMultipleClaimants = arr.length > 1;
-        const { displayName, count } = buyDetails;
         return (
-          <React.Fragment key={userId}>
+          <React.Fragment key={name}>
             {isFirst && !isLast ? ", " : isLast && hasMultipleClaimants ? " and " : ""}
             <Text {...textProps} size={isMobile ? "xsmall" : textProps?.size}>
-              {showAmounts ? count + " from " : ""}
-              {displayName}
+              {name}
             </Text>
           </React.Fragment>
         );
