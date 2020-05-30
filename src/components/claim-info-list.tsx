@@ -47,13 +47,13 @@ const ClaimInfoList: FC<IClaimInfoListProps> = ({ lystItem, onUpdateCount, onDel
           action = deleteBuyerSuccess(lystItemId, doc.id);
         }
         if (action) dispatch(action);
-        setFetched(true);
       });
+      setFetched(true);
     });
   }, [lystItemId, dispatch]);
 
-  if (fetched) {
-    return <Spinner />;
+  if (!fetched) {
+    return null;
   }
 
   return (

@@ -5,7 +5,6 @@ import { useStateSelector } from "../store";
 import { useFormik } from "formik";
 import useEditableLystItem from "../hooks/use-editable-lyst-item";
 import EditableLystItemCardContent from "./editable-lyst-item-card-content";
-import { storage } from "firebase";
 
 interface Props {
   lystItemId: string;
@@ -30,7 +29,6 @@ const EditableLystItemModal: FC<Props> = ({ lystItemId, uploadImgPath, onSave, o
       ...(lystItem.thumb ? { thumb: lystItem.thumb } : {}),
     },
     onSubmit: (values: ILystItemFormFields) => {
-      console.log(values);
       onSave(values);
       onClose();
     },

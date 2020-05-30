@@ -21,11 +21,11 @@ const useLystItemActions = (lystId: string, lystItemId: string) => {
     const user = await db.doc(`users/${claimantId}`).get();
     const isAnonymous = !user.exists;
     const userData = user.data() as IUser;
-    const defaultDisplayName = userData.displayName;
-    const displayNameToUse = displayName || userData.displayName;
+    const defaultDisplayName = userData ? userData.displayName : undefined;
+    const displayNameToUse = displayName || defaultDisplayName;
     const isDefaultName = displayNameToUse === defaultDisplayName;
 
-    if (isAnonymous && !displayName) throw Error("Displayname is a required argument for anonymous claims");
+    if (!displayNameToUse) throw Error("Displayname is a required argument for claims");
 
     const buyerDetails: IBuyer = {
       confirmed: isAnonymous ? true : claimantIsCurrentUser,

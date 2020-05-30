@@ -103,7 +103,7 @@ function LystItemsReducer(state = initialState, action: TAction) {
         },
         buyersByLystItemId: {
           ...state.buyersByLystItemId,
-          [action.payload.lystItemId]: [...state.buyersByLystItemId[action.payload.lystItemId], action.payload.buyer.id],
+          [action.payload.lystItemId]: [...(state.buyersByLystItemId[action.payload.lystItemId] || []), action.payload.buyer.id],
         },
       };
     case "lystItems/DELETE_BUYER_SUCCESS":
@@ -114,7 +114,7 @@ function LystItemsReducer(state = initialState, action: TAction) {
             ...accum,
             ...(action.payload.buyerId !== buyerId ? { [buyerId]: buyer } : {}),
           }),
-          state.buyers
+          {} as { [id: string]: IBuyer }
         ),
         buyersByLystItemId: {
           ...state.buyersByLystItemId,

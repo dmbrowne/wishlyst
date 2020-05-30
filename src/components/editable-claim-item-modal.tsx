@@ -61,7 +61,7 @@ const EditableClaimItemModal: FC<IProps> = ({ onClose, lystItemId }) => {
   const lystItem = useStateSelector(state => state.lystItems.allItems[lystItemId]);
   const { totalClaimed } = lystItem;
   const { createClaim, removeClaim, updateClaim, getUserClaimSnapshot } = useLystItemActions(lystItem.wishlystId, lystItem.id);
-  const hasBuyers = totalClaimed && totalClaimed > 0;
+  const hasBuyers = !!totalClaimed && totalClaimed > 0;
   const completelyClaimed = totalClaimed && totalClaimed >= lystItem.quantity;
 
   const [selectedBuyerOption, setSelectedBuyerOption] = useState<"me" | "user" | "anonymous">("me");
