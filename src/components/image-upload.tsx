@@ -1,5 +1,5 @@
 import React, { useRef, FC, ReactNode, useState } from "react";
-import firebase, { storage, functions } from "firebase/app";
+import firebase, { storage } from "firebase/app";
 import { EFetchStatus } from "../@types";
 
 // export interface IProps extends Omit<IComponentProps, "onInputFileChange" | "imageRef" | "onDelete"> {
@@ -15,7 +15,6 @@ export interface IProps {
   name: string;
   uploadRefPath: string;
   previewImageRef?: string;
-  shouldGenerateThumbnail?: boolean;
   fileTypeWhiteList?: MimeType["type"][];
   onUploadSuccess?: (snap: firebase.storage.UploadTaskSnapshot) => void;
   onDeleteSuccess?: (snap: firebase.storage.UploadTaskSnapshot) => void;
@@ -24,8 +23,7 @@ export interface IProps {
 }
 
 export const ImageUpload: FC<IProps> = ({ children, ...props }) => {
-  const { uploadRefPath, onUploadSuccess, onDeleteSuccess, previewImageRef, onUploadStateChange, shouldGenerateThumbnail } = props;
-  const { current: generateThumbnails } = useRef(functions().httpsCallable("generateThumbnails"));
+  const { uploadRefPath, onUploadSuccess, onDeleteSuccess, previewImageRef, onUploadStateChange } = props;
   const allowedFileTypes = props.fileTypeWhiteList || ["image/png", "image/jpeg"];
   const { current: storageRef } = useRef(firebase.storage().ref());
   const [uploadStatus, setUploadStatus] = useState(EFetchStatus.initial);
@@ -49,7 +47,6 @@ export const ImageUpload: FC<IProps> = ({ children, ...props }) => {
     });
 
     uploadTask.then(async taskSnapshot => {
-      if (shouldGenerateThumbnail) await generateThumbnails({ storageRef: uploadRefPath });
       setUploadStatus(EFetchStatus.success);
       if (onUploadSuccess) onUploadSuccess(taskSnapshot);
     });

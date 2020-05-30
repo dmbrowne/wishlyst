@@ -16,10 +16,10 @@ firebaseApp.initializeApp({
 
 export const db = firebaseApp.firestore();
 
-if (window.location.hostname === "localhost") {
-  db.settings({
-    host: `${window.location.hostname}:7000`,
-    ssl: false,
-  });
-  firebaseApp.functions().useFunctionsEmulator(`http://${window.location.hostname}:5001`);
-}
+// if (window.location.hostname === "localhost") {
+//   db.settings({
+//     host: `${window.location.hostname}:7000`,
+//     ssl: false,
+//   });
+//   firebaseApp.functions().useFunctionsEmulator(`http://${window.location.hostname}:5001`);
+// }

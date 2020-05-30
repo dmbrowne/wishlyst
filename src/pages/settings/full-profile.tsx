@@ -60,7 +60,6 @@ const ProfileSettings: FC<RouteComponentProps> = ({ history }) => {
         <Box margin={{ bottom: "medium" }} height="150px">
           <ImageUpload
             name="user-avatar"
-            shouldGenerateThumbnail={false}
             uploadRefPath={`users/avatar_${account.uid}`}
             onUploadSuccess={uploadImgSuccess}
             onUploadStateChange={onUploadStateChange}
