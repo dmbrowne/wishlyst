@@ -5,6 +5,7 @@ import * as fs from "fs-extra";
 import * as sharp from "sharp";
 
 const sizes = [64, 128, 400];
+export const thumbnailPrefix = "thumb@";
 
 const genSizeFileName = (size: number, fileName: string) => {
   return `thumb@${size}_${fileName}`;
