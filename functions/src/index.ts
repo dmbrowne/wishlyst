@@ -1,5 +1,13 @@
 import * as admin from "firebase-admin";
 
+import {
+  increaseClaimCount,
+  updateClaimCount,
+  removeBuyersClaimCount,
+  addQuickViewBuyerNameAndId,
+  updateQuickViewBuyerNameAndId,
+  removeQuickViewBuyerNameAndId,
+} from "./lyst-items";
 import { createUserProfile, updateAccountDisplayName, ugradeAnnoymousUser } from "./auth";
 import { getImagesFromUrl } from "./puppeteer";
 import { generateThumbnails, removeImageAndThumbsOnLystItemDelete, removeImageThumbsOnRemove } from "./images";
@@ -22,4 +30,10 @@ module.exports = {
   deleteAllCategories,
   moveAllNestedLystItemsToRoot,
   fixCategoryData,
+  increaseClaimCount,
+  updateClaimCount,
+  removeBuyersClaimCount,
+  addQuickViewBuyerNameAndId,
+  updateQuickViewBuyerNameAndId,
+  removeQuickViewBuyerNameAndId,
 };
