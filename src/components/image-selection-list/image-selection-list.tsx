@@ -10,7 +10,7 @@ import { storage } from "firebase";
 export interface IImageSelectionList {
   name: string;
   uploadRefPath: string;
-  previewImageRef?: string;
+  previewImageUrl?: string;
   fetchingUrlImage?: boolean;
   uploadPending?: boolean;
   hideClipboard?: boolean;
@@ -76,7 +76,7 @@ const ImageSelectionList: FC<IImageSelectionList> = ({
         width={mainImageWidth}
         height={mainImageHeight}
         uploadRef={props.uploadRefPath}
-        thumbRef={props.previewImageRef}
+        previewImageUrl={props.previewImageUrl}
         onDeleteSuccess={onDeleteImageSuccess}
         onUploadSuccess={onUploadImageSuccess}
         buttonContainerHeight={buttonContainerHeight}

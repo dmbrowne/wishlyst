@@ -3,8 +3,6 @@ import { Heading, Box, BoxTypes } from "grommet";
 import { db } from "../firebase";
 import { ILystItem } from "../@types";
 import SRoundedCard from "../styled-components/rounded-card";
-import FirebaseImage from "./firebase-image";
-import getImgThumb, { EThumbSize } from "../utils/get-image-thumb";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import { GuestProfileContext } from "../context/guest-profile";
 import { FabButton } from "../styled-components/fab-button";
@@ -45,13 +43,7 @@ export const ClaimedLystItemsPreviewList: FC<IProps> = ({ lystId, cardProps }) =
       {lystItems.map(lystItem => (
         <SRoundedCard key={lystItem.id} width="35vw" style={{ flexShrink: 0 }}>
           <Box>
-            <Box style={{ height: "30vw" }}>
-              {lystItem.thumb && (
-                <FirebaseImage imageRef={getImgThumb(lystItem.thumb, EThumbSize.large)}>
-                  {imgUrl => <SObjectFitImage src={imgUrl} />}
-                </FirebaseImage>
-              )}
-            </Box>
+            <Box style={{ height: "30vw" }}>{lystItem.image?.downloadUrl && <SObjectFitImage src={lystItem.image.downloadUrl} />}</Box>
             <Heading level={4} children={lystItem.name} margin={{ bottom: "xsmall" }} />
           </Box>
         </SRoundedCard>

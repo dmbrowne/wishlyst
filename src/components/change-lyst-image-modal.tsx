@@ -6,11 +6,21 @@ import { Box, Tabs, Tab, ResponsiveContext } from "grommet";
 import ImageUpload from "./image-upload";
 import ImageUploadPlaceholder from "./image-upload-placeholder";
 
+type IOnSubmitProps =
+  | {
+      isCustomImage: false;
+      downloadUrl: string;
+    }
+  | {
+      isCustomImage: true;
+      storageRef: string;
+      downloadUrl: string;
+    };
 interface Props {
   onClose: () => void;
   activeRef?: string;
   customUploadRef: string;
-  onSubmit: (ref: string) => any;
+  onSubmit: (props: IOnSubmitProps) => any;
 }
 
 const ChangeLystImageModal: FC<Props> = ({ onClose, activeRef, onSubmit, customUploadRef }) => {

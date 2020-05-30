@@ -8,7 +8,7 @@ import FileInput from "../file-input";
 
 interface IProps {
   uploadRef: string;
-  thumbRef?: string;
+  previewImageUrl?: string;
   width: string;
   height: string;
   onDeleteSuccess: () => any;
@@ -19,7 +19,7 @@ interface IProps {
 
 const MainImage: FC<IProps> = ({
   uploadRef,
-  thumbRef,
+  previewImageUrl,
   showUploadSpinner,
   onDeleteSuccess,
   width,
@@ -42,7 +42,7 @@ const MainImage: FC<IProps> = ({
                 ) : (
                   <ImageUploadPlaceholder
                     name={name}
-                    imageRef={thumbRef}
+                    previewImgUrl={previewImageUrl}
                     onInputFileChange={onUpload}
                     label="Upload an image"
                     onDelete={deleteImage}
@@ -50,7 +50,7 @@ const MainImage: FC<IProps> = ({
                 )}
               </Box>
               <div style={{ height: buttonContainerHeight, marginTop: 4 }}>
-                {!isUploading && thumbRef && isMobile && (
+                {!isUploading && previewImageUrl && isMobile && (
                   <Box direction="row" justify="between">
                     <FileInput name={name}>
                       <Button primary color="light-1" size="small" label="Upload" />

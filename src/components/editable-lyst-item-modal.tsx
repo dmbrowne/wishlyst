@@ -26,7 +26,7 @@ const EditableLystItemModal: FC<Props> = ({ lystItemId, uploadImgPath, onSave, o
       suggestedNames: lystItem.suggestedNames || null,
       suggestedImages: lystItem.suggestedImages || null,
       quantity: lystItem.quantity || 1,
-      ...(lystItem.thumb ? { thumb: lystItem.thumb } : {}),
+      ...(lystItem.image ? { image: lystItem.image } : {}),
     },
     onSubmit: (values: ILystItemFormFields) => {
       onSave(values);
@@ -61,8 +61,8 @@ const EditableLystItemModal: FC<Props> = ({ lystItemId, uploadImgPath, onSave, o
         onChange={formikData.handleChange}
         setFieldValue={formikData.setFieldValue}
         uploadImgPath={uploadImgPath}
-        onDeleteImageSuccess={() => formikData.setFieldValue("thumb", null)}
-        onUploadImageSuccess={ref => formikData.setFieldValue("thumb", ref)}
+        onDeleteImageSuccess={() => formikData.setFieldValue("imageRef", null)}
+        onUploadImageSuccess={({ ref }) => formikData.setFieldValue("imageRef", ref.fullPath)}
         imgUploadPending={editableLystItem.imgUploadPending}
         values={formikData.values as any}
         onSelectImage={dataUrl => editableLystItem.uploadImage(dataUrl)}

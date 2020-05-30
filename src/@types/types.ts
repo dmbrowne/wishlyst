@@ -7,6 +7,10 @@ export enum EFetchStatus {
   error = "error",
 }
 
+interface IImageDefinition {
+  storageRef: string;
+  downloadUrl: string;
+}
 export interface ICategory {
   id: string;
   label: string;
@@ -15,7 +19,7 @@ export interface ICategory {
 export interface ILyst {
   id: string;
   name: string;
-  thumb?: string;
+  image?: Pick<IImageDefinition, "downloadUrl"> & { isCustomImage: boolean; storageRef?: string };
   description?: string;
   requests?: string[];
   public: boolean;
@@ -33,8 +37,7 @@ export interface IBuyer {
   isAnonymous: boolean;
   confirmed: boolean;
   userId: string;
-
-  thumb?: string;
+  thumbnailUrl?: string;
 }
 
 export interface IAlgoliaLystItem {
@@ -54,7 +57,7 @@ export interface ILystItem {
   url?: string;
   description?: string;
   color?: string;
-  thumb?: string;
+  image?: IImageDefinition;
   quantity: number;
   categoryId?: string;
   suggestedNames?: string[] | null;
@@ -68,7 +71,7 @@ export interface ILystItem {
 export interface ILystItemFormFields
   extends Pick<
     ILystItem,
-    "name" | "url" | "description" | "color" | "thumb" | "quantity" | "categoryId" | "suggestedNames" | "suggestedImages"
+    "name" | "url" | "description" | "image" | "color" | "quantity" | "categoryId" | "suggestedNames" | "suggestedImages"
   > {}
 
 export interface IClaimedItem {
@@ -84,7 +87,7 @@ export interface IUser {
   firstName?: string;
   lastName?: string;
   displayName: string;
-  thumb?: string;
+  image?: Pick<IImageDefinition, "downloadUrl"> & { storageRef?: string };
   bookmarked?: string[];
   lystItemsCount?: {
     [lystId: string]: number;

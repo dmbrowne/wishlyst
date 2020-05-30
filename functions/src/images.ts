@@ -1,9 +1,9 @@
-import { removeFileFromStorage, thumbnailPrefix, resizeOriginalImage } from "./utils/images";
+import { ILyst } from "@types";
+import { removeFileFromStorage, resizeOriginalImage } from "./utils/images";
 import * as functions from "firebase-functions";
 
 export const resizeImage = functions.storage.object().onFinalize(async snapshot => {
   if (!snapshot.name) return;
-  if (snapshot.name.startsWith(thumbnailPrefix)) return;
   if (snapshot.metadata && snapshot.metadata.resized) return;
 
   try {
@@ -15,17 +15,19 @@ export const resizeImage = functions.storage.object().onFinalize(async snapshot 
 });
 
 export const removeImageOnLystItemDelete = functions.firestore.document("lysts/{lystId}/lystItems/{itemId}").onDelete(snapshot => {
-  const { thumb } = snapshot.data() as { thumb?: string };
-  if (!thumb) return;
-  return removeFileFromStorage(thumb);
+  const { image } = snapshot.data() as Omit<ILyst, "id">;
+  if (image?.isCustomImage && image?.storageRef) {
+    return removeFileFromStorage(image.storageRef);
+  }
+  return;
 });
 
 export const removeImageThumbsOnRemove = functions.firestore.document("lysts/{lystId}/lystItems/{itemId}").onUpdate(({ before, after }) => {
-  const oldItem = before.data() as any;
-  const newItem = after.data() as any;
+  const oldItem = before.data() as ILyst;
+  const newItem = after.data() as ILyst;
 
-  if (oldItem.thumb !== newItem.thumb) {
-    return removeFileFromStorage(oldItem.thumb);
+  if (oldItem.image?.isCustomImage && !!oldItem.image?.storageRef && oldItem.image !== newItem.image) {
+    return removeFileFromStorage(oldItem.image.storageRef);
   }
 
   return true;

@@ -24,9 +24,9 @@ const ProfileSettings: FC<RouteComponentProps> = ({ history }) => {
     else return Promise.reject();
   };
 
-  const uploadImgSuccess = (taskSnap: firebase.storage.UploadTaskSnapshot) => {
-    updateUser({ thumb: taskSnap.ref.fullPath }).then(() => {
-      console.log("user updated");
+  const uploadImgSuccess = async (taskSnap: firebase.storage.UploadTaskSnapshot) => {
+    const downloadUrl = (await taskSnap.ref.getDownloadURL()) as string;
+    updateUser({ image: { downloadUrl, storageRef: taskSnap.ref.fullPath } }).then(() => {
       setUploadPending(false);
     });
   };
@@ -68,7 +68,12 @@ const ProfileSettings: FC<RouteComponentProps> = ({ history }) => {
               !uploadPending ? (
                 <Box direction="row" align="center" gap="medium">
                   <Box width="150px" height="150px" round="full" justify="center" overflow="hidden" border={{ style: "dotted" }}>
-                    <ImageUploadPlaceholder name={name} imageRef={user.thumb} onInputFileChange={onUpload} onDelete={onDelete} />
+                    <ImageUploadPlaceholder
+                      name={name}
+                      previewImgUrl={user.image?.downloadUrl}
+                      onInputFileChange={onUpload}
+                      onDelete={onDelete}
+                    />
                   </Box>
                   <FileInput name={name} children={<Button as="span" label="Change" />} />
                 </Box>

@@ -58,8 +58,8 @@ const LystHeader: FC<IProps> = ({ lyst, editable, onUpdateDetails, saveOptions, 
     setEditMode(false);
   };
 
-  const onChangeImage = (imgRef: string) => {
-    if (onUpdateDetails) onUpdateDetails({ thumb: imgRef });
+  const onChangeImage = (downloadUrl: string, isCustomImage: boolean, storageRef?: string) => {
+    if (onUpdateDetails) onUpdateDetails({ image: { ...(isCustomImage ? { storageRef } : {}), downloadUrl, isCustomImage } });
     setChangeImageModalVisible(false);
   };
 
@@ -111,14 +111,14 @@ const LystHeader: FC<IProps> = ({ lyst, editable, onUpdateDetails, saveOptions, 
       <Box direction={isMobile ? "column" : "row"} width={isMobile ? "100%" : "auto"} align="center" gap="medium">
         <Box>
           <SImageContainer isMobile={isMobile}>
-            {lyst.thumb && <FirebaseImage imageRef={lyst.thumb}>{url => <SObjectFitImage src={url} />}</FirebaseImage>}
+            {lyst.image?.downloadUrl && <SObjectFitImage src={lyst.image.downloadUrl} />}
             {editable && <SOverlayActions autoHide justify="center" children={imageActionButton} />}
           </SImageContainer>
           {editable && (
             <Box margin={{ top: "small" }} align="center">
               <Button
                 hoverIndicator="brandDark"
-                label={<Text color="white">{`${lyst.thumb ? "Change" : "Set"} cover`}</Text>}
+                label={<Text color="white">{`${lyst.image ? "Change" : "Set"} cover`}</Text>}
                 onClick={() => setChangeImageModalVisible(true)}
                 color="brand"
                 primary
@@ -187,7 +187,10 @@ const LystHeader: FC<IProps> = ({ lyst, editable, onUpdateDetails, saveOptions, 
         <ChangeLystImageModal
           customUploadRef={`lysts/${lyst.id}/header-thumb`}
           onClose={() => setChangeImageModalVisible(false)}
-          onSubmit={onChangeImage}
+          onSubmit={props => {
+            if (props.isCustomImage) onChangeImage(props.downloadUrl, true, props.storageRef);
+            else onChangeImage(props.downloadUrl, false);
+          }}
         />
       )}
     </>

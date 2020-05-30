@@ -4,8 +4,6 @@ import * as os from "os";
 import * as fs from "fs-extra";
 import * as sharp from "sharp";
 
-export const thumbnailPrefix = "thumb@";
-
 const getTempFilename = (filePath: string) => (tempName?: string) => {
   const fileName = path.basename(filePath);
   const workingDir = path.join(os.tmpdir(), fileName.substring(0, fileName.lastIndexOf(".")));

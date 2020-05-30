@@ -120,8 +120,8 @@ const ListDetail: FC<IProps> = ({ lyst, onFilter, lystItems }) => {
       {unclaimModalItem && <UnclaimModal lystItem={unclaimModalItem} onClose={() => setUnclaimModalItem()} />}
       {viewLystItem && (
         <Modal title="Item details" onClose={() => setViewLystItem()}>
-          {viewLystItem.thumb ? (
-            <FirebaseImage imageRef={viewLystItem.thumb}>{url => <SObjectFitImage src={url} />}</FirebaseImage>
+          {viewLystItem.image?.downloadUrl ? (
+            <SObjectFitImage src={viewLystItem.image.downloadUrl} />
           ) : (
             <Box background="light-6" pad="large" align="center" justify="center" children={<Text>No Image</Text>} />
           )}

@@ -9,16 +9,10 @@ const SAvatarImage = styled.img`
   height: 100%;
 `;
 
-export const Avatar: FC<
-  | {
-      name?: string;
-      imgSrc: string;
-    }
-  | {
-      name: string;
-      imgSrc?: undefined;
-    }
-> = props => (
+export const Avatar: FC<{
+  name: string;
+  imgSrc?: string;
+}> = props => (
   <Box width="40px" height="40px" background="dark-3" style={{ borderRadius: "50%" }} align="center" justify="center">
     {props.imgSrc !== undefined ? (
       <SAvatarImage src={props.imgSrc} />

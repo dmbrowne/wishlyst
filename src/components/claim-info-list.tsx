@@ -75,7 +75,7 @@ const ClaimInfoList: FC<IClaimInfoListProps> = ({ lystItem, onUpdateCount, onDel
 };
 
 const BuyerClaim: FC<Props> = ({ buyer, maxCount, onUpdateCount, showCount, onDelete }) => {
-  const { displayName, thumb, count, userId } = buyer;
+  const { displayName, thumbnailUrl, count, userId } = buyer;
   const onIncrement = () => {
     let newCount = buyer.count + 1;
     newCount = newCount > maxCount ? maxCount : newCount;
@@ -89,11 +89,7 @@ const BuyerClaim: FC<Props> = ({ buyer, maxCount, onUpdateCount, showCount, onDe
   return (
     <Box key={userId} pad={{ left: "none", vertical: "xxsmall", right: "xxsmall" }} border="between">
       <Box direction="row" gap="small" align="center">
-        {thumb ? (
-          <FirebaseImage imageRef={thumb} children={imgSrc => <Avatar imgSrc={imgSrc} name={displayName} />} />
-        ) : (
-          <Avatar name={displayName} />
-        )}
+        <Avatar name={displayName} imgSrc={thumbnailUrl} />
         <Box justify="between" align="center" direction="row" style={{ flex: 1 }}>
           <Text children={displayName} as="div" />
           <Box direction="row" gap="small" align="center">

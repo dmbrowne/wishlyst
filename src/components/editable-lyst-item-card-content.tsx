@@ -2,7 +2,7 @@ import React, { FC, useContext } from "react";
 import { Box, Heading, TextArea, ResponsiveContext } from "grommet";
 import SearchableSelect from "./searchable-select";
 import ImageSelectionList, { IImageSelectionList } from "./image-selection-list";
-import { ILystItem } from "../@types";
+import { ILystItemFormFields } from "../@types";
 import { CategoriesContext } from "../context/categories";
 import FieldInput from "./field-input";
 import FieldInputLabel from "./field-input-label";
@@ -14,10 +14,7 @@ interface Props extends Omit<IImageSelectionList, "name" | "fetchingUrlImage" | 
   setFieldValue: (fieldName: string, value: any) => any;
   uploadImgPath: string;
   onDeleteImageSuccess: () => any;
-  values: Pick<
-    ILystItem,
-    "url" | "name" | "suggestedNames" | "quantity" | "categoryId" | "thumb" | "suggestedImages" | "description" | "color"
-  >;
+  values: ILystItemFormFields;
 }
 
 const EditableLystItemCardContent: FC<Props> = ({ urlGraphFetchPending, onChange, setFieldValue, values, ...props }) => {
@@ -65,7 +62,7 @@ const EditableLystItemCardContent: FC<Props> = ({ urlGraphFetchPending, onChange
       <ImageSelectionList
         name="lystItemThumb"
         uploadRefPath={props.uploadImgPath}
-        previewImageRef={values.thumb}
+        previewImageUrl={values.image?.downloadUrl}
         onDeleteImageSuccess={props.onDeleteImageSuccess}
         fetchingUrlImage={urlGraphFetchPending}
         uploadPending={props.imgUploadPending}

@@ -73,7 +73,13 @@ const useEditableLystItem = ({ onUpdateLystItem, uploadImgPath, values }: IProps
     return new Promise<void>(resolve => {
       uploadTask.on("state_changed", onUploadStateChange, onError);
       uploadTask.then(async taskSnapshot => {
-        onUpdateLystItem({ thumb: taskSnapshot.ref.fullPath });
+        const downloadUrl = await taskSnapshot.ref.getDownloadURL();
+        onUpdateLystItem({
+          image: {
+            storageRef: taskSnapshot.ref.fullPath,
+            downloadUrl,
+          },
+        });
         setImgUploadPending(false);
         resolve();
       });

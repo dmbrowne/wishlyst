@@ -1,21 +1,10 @@
+import { IUser } from "@types";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as fs from "fs";
-import * as http from "http";
-import * as https from "https";
-import * as os from "os";
 
 type AccountType = "standard" | "admin";
-interface FirestoreUserData {
-  email: string | null;
-  displayName: string | null;
-  thumb?: string | null;
-  firstName?: string;
-  lastName?: string;
-  _private: { role: AccountType };
-}
 
-const generateUserDocument = (userData: Omit<FirestoreUserData, "_private">, accountType: AccountType = "standard"): FirestoreUserData => {
+const generateUserDocument = (userData: Omit<IUser, "id" | "_private">, accountType: AccountType = "standard"): Omit<IUser, "id"> => {
   return {
     ...userData,
     _private: {
@@ -31,51 +20,27 @@ const getDetailsFromProvider = (providerData: admin.auth.UserInfo[]) => {
       displayName: accum.displayName || provider.displayName,
       photoURL: accum.photoURL || provider.photoURL,
     };
-  }, {} as Pick<FirestoreUserData, "email" | "displayName"> & { photoURL: string | null });
+  }, {} as Pick<IUser, "email" | "displayName"> & { photoURL: string | null });
 
   return derivedDataFromProvider;
 };
 
-const uploadPhotoToStorageFromUrl = async (url: string, userId: string) => {
-  const storagePath = `users/avatar_${userId}`;
-  const bucket = admin.storage().bucket();
-  const destination = os.tmpdir() + `/avatar_${userId}`;
-
-  try {
-    const file = fs.createWriteStream(destination);
-    const get = url.startsWith("https") ? https.get : url.startsWith("http") ? http.get : null;
-    if (!get) {
-      console.error("url doesnt start with http or https");
-      return null;
-    }
-    await new Promise((resolve, reject) => {
-      get(url, response => {
-        response.pipe(file);
-        file.on("finish", () => {
-          file.close();
-          bucket.upload(destination, { destination: storagePath }, (err, uploadedFile) => {
-            if (err) reject(err.message);
-            resolve();
-          });
-        });
-      }).on("error", err => reject(err.message));
-    });
-    return storagePath;
-  } catch (error) {
-    return null;
-  }
-};
-
-const prepNewUser = async (account: admin.auth.UserRecord, accountType: AccountType = "standard") => {
-  const { uid, email: emailAddress, displayName, providerData, photoURL } = account;
+const prepNewUser = (account: admin.auth.UserRecord, accountType: AccountType = "standard") => {
+  const { email: emailAddress, displayName, providerData, photoURL } = account;
   const derivedDataFromProvider = providerData ? getDetailsFromProvider(providerData) : { email: null, displayName: null, photoURL: null };
 
-  const email = emailAddress || derivedDataFromProvider.email || null;
-  const name = displayName || derivedDataFromProvider.displayName || null;
+  const email = emailAddress || derivedDataFromProvider.email || "";
+  const name = displayName || derivedDataFromProvider.displayName || "null";
   const photo = photoURL || derivedDataFromProvider.photoURL || null;
-  const thumb = photo ? await uploadPhotoToStorageFromUrl(photo, uid) : null;
 
-  return generateUserDocument({ email, displayName: name, thumb }, accountType);
+  return generateUserDocument(
+    {
+      email,
+      displayName: name,
+      ...(photo ? { image: { downloadUrl: photo } } : {}),
+    },
+    accountType
+  );
 };
 
 export const updateAccountDisplayName = functions.firestore.document("users/{id}").onUpdate((change, { params }) => {
@@ -96,7 +61,7 @@ export const ugradeAnnoymousUser = functions.https.onCall(async (data, context) 
 
   if (!account) throw new functions.https.HttpsError("not-found", "user account not found");
 
-  const newUser = await prepNewUser(account);
+  const newUser = prepNewUser(account);
   const db = admin.firestore();
   const batch = db.batch();
 
@@ -116,7 +81,6 @@ export const createUserProfile = functions.runWith({ memory: "512MB" }).https.on
 
   try {
     const newUser = await prepNewUser(account);
-
     if (firstName) newUser.firstName = firstName;
     if (lastName) newUser.lastName = lastName;
     if (!newUser.displayName) newUser.displayName = displayName;

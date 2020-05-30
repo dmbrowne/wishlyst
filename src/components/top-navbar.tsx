@@ -4,7 +4,6 @@ import { Box, Text, Button, ResponsiveContext } from "grommet";
 import styled from "styled-components";
 import { withRouter, Link, useLocation } from "react-router-dom";
 import { List, Bookmark, Icon as IconType, UserManager } from "grommet-icons";
-import FirebaseImage from "./firebase-image";
 import { Avatar } from "./avatar";
 import { useStateSelector } from "../store";
 import { Icon } from "gestalt";
@@ -19,17 +18,15 @@ const SContainer = styled(Box).attrs(({ theme }) => ({
     `linear-gradient(90deg,rgba(222, 181, 54,${dark ? "0.6" : "1"}),rgba(227, 193, 95, ${dark ? "0.6" : "1"}))`};
 `;
 
-const UserMenu: FC<{ thumb?: string; displayName: string }> = ({ thumb, displayName }) => {
+const UserMenu: FC<{ thumbnailUrl?: string; displayName: string }> = ({ thumbnailUrl, displayName }) => {
   const location = useLocation();
   const isMobile = useContext(ResponsiveContext) === "small";
   return (
     <Link to={isMobile ? "/app/settings" : "/app/settings/edit-profile"}>
       {location.pathname.startsWith("/app/settings") ? (
         <Icon icon="cog" color="white" size="24px" accessibilityLabel="account settings" />
-      ) : thumb ? (
-        <FirebaseImage imageRef={thumb}>{imgUrl => <Avatar imgSrc={imgUrl} />}</FirebaseImage>
       ) : (
-        <Avatar name={displayName} />
+        <Avatar name={displayName} imgSrc={thumbnailUrl} />
       )}
     </Link>
   );
@@ -75,7 +72,9 @@ const TopNavbar = withRouter(({ history }) => {
         <Logo />
       </Box>
       <Box pad={{ vertical: "small" }} justify="center" width="150px" align="end">
-        {account && !account.isAnonymous && (user ? <UserMenu thumb={user.thumb} displayName={user.displayName || user.email} /> : null)}
+        {account &&
+          !account.isAnonymous &&
+          (user ? <UserMenu thumbnailUrl={user.image?.downloadUrl} displayName={user.displayName || user.email} /> : null)}
         {account && account.isAnonymous && <UserMenu displayName={`${account.displayName || "?"}`} />}
         {account === null &&
           (isMobile ? (

@@ -2,9 +2,7 @@ import React, { FC, ReactElement, useContext } from "react";
 import { SRoundedCard } from "../styled-components/rounded-card";
 import { Box, Heading, Text, BoxTypes, ResponsiveContext, Button } from "grommet";
 import { ILystItem } from "../@types";
-import FirebaseImage from "./firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";
-import getImgThumb, { EThumbSize } from "../utils/get-image-thumb";
 import styled, { css, useTheme } from "styled-components";
 import { ReactComponent as PresentSphere } from "../assets/icons/present_sphere.svg";
 
@@ -83,10 +81,8 @@ const LystItemCard: FC<IProps> = ({ lystItem, muted, footer, children, onView, .
       <Box>
         <Button plain onClick={onView}>
           <SImgContainer>
-            {lystItem.thumb ? (
-              <FirebaseImage imageRef={getImgThumb(lystItem.thumb, EThumbSize.large)}>
-                {imgUrl => <SObjectFitImage src={imgUrl} />}
-              </FirebaseImage>
+            {lystItem.image?.downloadUrl ? (
+              <SObjectFitImage src={lystItem.image.downloadUrl} />
             ) : (
               <Box fill background={dark ? "dark-2" : "light-1"} align="center" justify="center">
                 <Box width="90px" height="90px">

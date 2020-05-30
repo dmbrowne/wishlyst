@@ -124,8 +124,8 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
                 overflow="hidden"
               >
                 <Box height={isMobile ? "80px" : "150px"}>
-                  {lyst.thumb ? (
-                    <FirebaseImage imageRef={lyst.thumb}>{imgSrc => <SObjectFitImage src={imgSrc} />}</FirebaseImage>
+                  {lyst.image?.downloadUrl ? (
+                    <SObjectFitImage src={lyst.image.downloadUrl} />
                   ) : (
                     <Box pad="12px" background="dark-2" children={<ListIcon />} />
                   )}
