@@ -4,12 +4,7 @@ import * as os from "os";
 import * as fs from "fs-extra";
 import * as sharp from "sharp";
 
-const sizes = [64, 128, 400];
 export const thumbnailPrefix = "thumb@";
-
-const genSizeFileName = (size: number, fileName: string) => {
-  return `thumb@${size}_${fileName}`;
-};
 
 const getTempFilename = (filePath: string) => (tempName?: string) => {
   const fileName = path.basename(filePath);
@@ -31,22 +26,6 @@ export const resizeOriginalImage = async (filePath: string, contentType: string 
   await bucket.upload(resizedTempFilePath, { destination: filePath, metadata: metadata });
   await fs.unlink(resizedTempFilePath);
   return true;
-};
-
-export const removeThumbs = (filePath: string) => {
-  const bucket = admin.storage().bucket();
-  const fileName = path.basename(filePath);
-  const fileDir = path.dirname(filePath);
-
-  const sizeDeletionPromises = sizes.map(async size => {
-    const thumbnail = bucket.file(path.join(fileDir, genSizeFileName(size, fileName)));
-    const [fileExists] = await thumbnail.exists();
-    if (!fileExists) return;
-    await thumbnail.delete();
-    return true;
-  });
-
-  return Promise.all(sizeDeletionPromises);
 };
 
 export const removeFileFromStorage = async (filePath: string) => {

@@ -1,4 +1,4 @@
-import { removeThumbs, removeFileFromStorage, thumbnailPrefix, resizeOriginalImage } from "./utils/images";
+import { removeFileFromStorage, thumbnailPrefix, resizeOriginalImage } from "./utils/images";
 import * as functions from "firebase-functions";
 
 export const resizeImage = functions.storage.object().onFinalize(async snapshot => {
@@ -14,20 +14,18 @@ export const resizeImage = functions.storage.object().onFinalize(async snapshot 
   }
 });
 
-export const removeImageAndThumbsOnLystItemDelete = functions.firestore.document("lysts/{lystId}/lystItems/{itemId}").onDelete(snapshot => {
+export const removeImageOnLystItemDelete = functions.firestore.document("lysts/{lystId}/lystItems/{itemId}").onDelete(snapshot => {
   const { thumb } = snapshot.data() as { thumb?: string };
   if (!thumb) return;
-  return Promise.all([removeThumbs(thumb), removeFileFromStorage(thumb)]);
+  return removeFileFromStorage(thumb);
 });
 
 export const removeImageThumbsOnRemove = functions.firestore.document("lysts/{lystId}/lystItems/{itemId}").onUpdate(({ before, after }) => {
-  const oldItem = before.data();
-  const newItem = after.data();
-
-  if (!oldItem || !newItem) return true;
+  const oldItem = before.data() as any;
+  const newItem = after.data() as any;
 
   if (oldItem.thumb !== newItem.thumb) {
-    return Promise.all([removeThumbs(oldItem.thumb), removeFileFromStorage(oldItem.thumb)]);
+    return removeFileFromStorage(oldItem.thumb);
   }
 
   return true;
