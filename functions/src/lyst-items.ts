@@ -2,9 +2,9 @@ import { IBuyer, ILystItem } from "@types";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-const db = admin.firestore();
 
 export const increaseClaimCount = functions.firestore.document("lystItems/{itemId}/buyers/{buyerId}").onCreate(async (snap, context) => {
+  const db = admin.firestore();
   const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
   return db.runTransaction(async transaction => {
     const lystItem = await transaction.get(lystItemRef);
@@ -17,6 +17,7 @@ export const increaseClaimCount = functions.firestore.document("lystItems/{itemI
 export const updateClaimCount = functions.firestore
   .document("lystItems/{itemId}/buyers/{buyerId}")
   .onUpdate(async ({ before, after }, context) => {
+    const db = admin.firestore();
     const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
     return db.runTransaction(async transaction => {
       const lystItem = await transaction.get(lystItemRef);
@@ -32,6 +33,7 @@ export const updateClaimCount = functions.firestore
 export const removeBuyersClaimCount = functions.firestore
   .document("lystItems/{itemId}/buyers/{buyerId}")
   .onDelete(async (snap, context) => {
+    const db = admin.firestore();
     const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
     return db.runTransaction(async transaction => {
       const lystItem = await transaction.get(lystItemRef);
@@ -44,6 +46,7 @@ export const removeBuyersClaimCount = functions.firestore
   });
 
 export const addQuickViewBuyerNameAndId = functions.firestore.document("lystItems/{itemId}/buyers/{buyerId}").onCreate((snap, context) => {
+  const db = admin.firestore();
   const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
   const buyer = snap.data() as IBuyer;
   return lystItemRef.update({
@@ -55,6 +58,7 @@ export const addQuickViewBuyerNameAndId = functions.firestore.document("lystItem
 export const updateQuickViewBuyerNameAndId = functions.firestore
   .document("lystItems/{itemId}/buyers/{buyerId}")
   .onUpdate(({ before, after }, context) => {
+    const db = admin.firestore();
     const beforeData = before.data() as IBuyer;
     const afterData = after.data() as IBuyer;
 
@@ -75,6 +79,7 @@ export const updateQuickViewBuyerNameAndId = functions.firestore
 export const removeQuickViewBuyerNameAndId = functions.firestore
   .document("lystItems/{itemId}/buyers/{buyerId}")
   .onDelete((snap, context) => {
+    const db = admin.firestore();
     const data = snap.data() as IBuyer;
     const lystItemRef = db.doc(`lystItems/${context.params.itemId}`);
     return lystItemRef.update({
