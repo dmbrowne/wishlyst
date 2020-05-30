@@ -17,7 +17,7 @@ const getTempFilename = (filePath: string) => (tempName?: string) => {
   return path.join(workingDir, tempName || fileName);
 };
 
-export const resizeOriginalImage = async (filePath: string, contentType: string, bucketName?: string) => {
+export const resizeOriginalImage = async (filePath: string, contentType: string = "image/jpeg", bucketName?: string) => {
   const fileName = path.basename(filePath);
   const genTempName = getTempFilename(filePath);
   const bucket = admin.storage().bucket(bucketName);
