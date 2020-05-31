@@ -11,7 +11,6 @@ import { useStore } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
 import Modal from "./modal";
 import UnauthenticatedClaimModalContent from "./unauthenticated-claim-modal-content";
-import FirebaseImage from "./firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import LystItemCardGridLayout from "./lyst-item-card-grid-layout";
 import { IRootReducer } from "../store/combined-reducers";

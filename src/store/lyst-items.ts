@@ -43,6 +43,11 @@ export const fetchBuyerSuccess = (lystItemId: string, buyer: IBuyer & { id: stri
   payload: { lystItemId, buyer },
 });
 
+export const updateBuyerSuccess = (buyId: string, buyer: IBuyer) => ({
+  type: "lystItems/UPDATE_BUYER_SUCCESS" as "lystItems/UPDATE_BUYER_SUCCESS",
+  payload: { buyId, buyer },
+});
+
 export const deleteBuyerSuccess = (lystItemId: string, buyerId: string) => ({
   type: "lystItems/DELETE_BUYER_SUCCESS" as "lystItems/DELETE_BUYER_SUCCESS",
   payload: { lystItemId, buyerId },
@@ -54,7 +59,8 @@ type TAction =
   | ReturnType<typeof removeItem>
   | ReturnType<typeof setClaimedLystOrder>
   | ReturnType<typeof fetchBuyerSuccess>
-  | ReturnType<typeof deleteBuyerSuccess>;
+  | ReturnType<typeof deleteBuyerSuccess>
+  | ReturnType<typeof updateBuyerSuccess>;
 
 const initialState: IReducerState = {
   buyers: {},
@@ -104,6 +110,14 @@ function LystItemsReducer(state = initialState, action: TAction) {
         buyersByLystItemId: {
           ...state.buyersByLystItemId,
           [action.payload.lystItemId]: [...(state.buyersByLystItemId[action.payload.lystItemId] || []), action.payload.buyer.id],
+        },
+      };
+    case "lystItems/UPDATE_BUYER_SUCCESS":
+      return {
+        ...state,
+        buyers: {
+          ...state.buyers,
+          [action.payload.buyId]: { ...state.buyers[action.payload.buyId], ...action.payload.buyer },
         },
       };
     case "lystItems/DELETE_BUYER_SUCCESS":
