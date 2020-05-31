@@ -1,15 +1,13 @@
 import React, { FC, useState, useEffect } from "react";
 import { Box, Text, Button } from "grommet";
 import Avatar from "./avatar";
-import FirebaseImage from "./firebase-image";
 import { ILystItem, IBuyer } from "../@types";
 import { Add, Subtract } from "grommet-icons";
 import { IconButton } from "gestalt";
 import { useDispatch } from "react-redux";
 import { db } from "../firebase";
-import { fetchBuyerSuccess, deleteBuyerSuccess } from "../store/lyst-items";
+import { fetchBuyerSuccess, deleteBuyerSuccess, updateBuyerSuccess } from "../store/lyst-items";
 import { useStateSelector } from "../store";
-import Spinner from "./spinner";
 
 interface Props {
   buyer: IBuyer;
@@ -40,12 +38,17 @@ const ClaimInfoList: FC<IClaimInfoListProps> = ({ lystItem, onUpdateCount, onDel
     db.collection(`lystItems/${lystItemId}/buyers`).onSnapshot(querySnapshot => {
       querySnapshot.docChanges().forEach(({ doc, type }) => {
         let action;
-        if (type === "added" || type === "modified") {
+
+        if (type === "added") {
           action = fetchBuyerSuccess(lystItemId, { id: doc.id, ...(doc.data() as IBuyer) });
+        }
+        if (type === "modified") {
+          action = updateBuyerSuccess(doc.id, doc.data() as IBuyer);
         }
         if (type === "removed") {
           action = deleteBuyerSuccess(lystItemId, doc.id);
         }
+
         if (action) dispatch(action);
       });
       setFetched(true);
