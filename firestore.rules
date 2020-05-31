@@ -60,8 +60,14 @@ service cloud.firestore {
           function doesNotExceedQuantity() {
             return (totalClaimed() + request.resource.data.count) <= lystItemQuantity();
           }
+          function doesNotExceedQuantityAfterUpdate() {
+            return (totalClaimed()  - resource.data.count) + request.resource.data.count <= lystItemQuantity();
+          }
           function documentShapeIsValid() {
             return hasRequiredKeys() && doesNotExceedQuantity();
+          }
+          function documentShapeIsValidAfter() {
+            return hasRequiredKeys() && doesNotExceedQuantityAfterUpdate();
           }
           function claimForNonCurrentUser() {
             return request.resource.data.userId != request.auth.uid && request.resource.data.confirmed == false;
@@ -78,10 +84,11 @@ service cloud.firestore {
           
           allow create: if documentShapeIsValid() && ownsWishlyst() && claimForNonCurrentUser();
           allow create: if documentShapeIsValid() && ownsWishlyst() && claimForAnonymousUser();
-          allow update: if documentShapeIsValid() && ownsWishlyst();
+          allow update: if documentShapeIsValidAfter() && ownsWishlyst();
           allow read, delete: if ownsWishlyst();
 
-          allow create, update: if documentShapeIsValid() && claimForCurrentUser()
+          allow create: if documentShapeIsValid() && claimForCurrentUser()
+          allow update: if documentShapeIsValidAfter() && claimForCurrentUser()
           allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
         }
       }
