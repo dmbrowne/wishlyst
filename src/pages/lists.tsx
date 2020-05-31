@@ -16,7 +16,6 @@ import { myLystsSelector } from "../selectors";
 import { lystAdded, setMyLystsOrder } from "../store/lysts";
 import { ILyst } from "../@types";
 import { ReactComponent as ListIcon } from "../assets/icons/list.svg";
-import FirebaseImage from "../components/firebase-image";
 import SObjectFitImage from "../styled-components/object-fit-image";
 import FieldInput from "../components/field-input";
 
@@ -57,8 +56,9 @@ const Lists: FC<RouteComponentProps> = ({ history }) => {
         owner: user.uid,
       },
     };
-    newLystRef.set(newLyst);
-    history.push(`/app/wishlysts/${newLystRef.id}`);
+    newLystRef.set(newLyst).then(() => {
+      history.push(`/app/wishlysts/${newLystRef.id}`);
+    });
   };
 
   const updateNewLystName = (val: string) => {
