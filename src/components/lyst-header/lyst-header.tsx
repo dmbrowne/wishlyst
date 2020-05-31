@@ -8,7 +8,6 @@ import { ILyst } from "../../@types";
 import Modal from "../modal";
 import { SOverlayActions } from "../../styled-components/overlay-actions";
 import ChangeLystImageModal from "../change-lyst-image-modal";
-import FirebaseImage from "../firebase-image";
 import shortenUrl from "../../utils/url-shorten";
 import { SImageContainer, SShareContainer } from "./lyst-header.styles";
 import ShortUrlDisplay from "../short-url-display";
