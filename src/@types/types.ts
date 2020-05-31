@@ -47,7 +47,8 @@ export interface IAlgoliaLystItem {
   color?: string;
   thumbnailUrl?: string;
   categoryId?: string;
-  buyerUserIds?: string[];
+  buyerUserIds: string[];
+  claimed: boolean;
 }
 
 export interface ILystItem {
